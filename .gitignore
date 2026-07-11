@@ -48,6 +48,9 @@ out/
 !src/**/*.png
 !images/**/*.png
 !public/**/*.png
+# Site assets (logo, OG image, email logo) must ship to the site
+!assets/**/*.png
+!assets/**/*.jpg
 
 # Vercel
 .vercel/
