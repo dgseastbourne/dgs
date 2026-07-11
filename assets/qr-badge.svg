@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="DGS">
+  <!-- compact square badge for QR centres: car swoosh + DGS monogram -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M20 86 L42 70 L56 79 C88 47 140 34 180 64" stroke="#6CBE45" stroke-width="12"/>
+    <path d="M68 74 C94 56 126 50 152 60" stroke="#9B9B9B" stroke-width="8"/>
+    <path d="M40 90 C72 78 108 76 138 82" stroke="#111111" stroke-width="8"/>
+  </g>
+  <text x="100" y="156" text-anchor="middle" font-family="Verdana, Geneva, sans-serif" font-size="66" font-weight="bold" fill="#1A1A1A">D<tspan fill="#6CBE45">G</tspan>S</text>
+</svg>

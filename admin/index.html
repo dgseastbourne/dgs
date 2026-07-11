@@ -538,7 +538,8 @@
                         return;
                     }
                     try {
-                        const qr = qrcode(0, 'M');
+                        // error correction 'H' (~30%) so the centre logo doesn't break scanning
+                        const qr = qrcode(0, 'H');
                         qr.addData(url);
                         qr.make();
 
@@ -560,13 +561,37 @@
                                 }
                             }
                         }
-                        const png = canvas.toDataURL('image/png');
-                        document.getElementById('qr-img').src = png;
-                        const dl = document.getElementById('qr-download');
-                        dl.href = png;
-                        dl.download = filename;
-                        document.getElementById('qr-box').classList.remove('hidden');
-                        setStatus(status, 'QR generated — scan it to test, download for print.', true);
+
+                        const finalize = () => {
+                            const png = canvas.toDataURL('image/png');
+                            document.getElementById('qr-img').src = png;
+                            const dl = document.getElementById('qr-download');
+                            dl.href = png;
+                            dl.download = filename;
+                            document.getElementById('qr-box').classList.remove('hidden');
+                            setStatus(status, 'QR generated — scan it to test, download for print.', true);
+                        };
+
+                        // brand badge in the centre (white rounded backdrop + logo)
+                        const badge = new Image();
+                        badge.onload = () => {
+                            const b = Math.round(size * 0.24);
+                            const x = Math.round((size - b) / 2);
+                            const rad = Math.round(b * 0.18);
+                            ctx.fillStyle = '#ffffff';
+                            if (ctx.roundRect) {
+                                ctx.beginPath();
+                                ctx.roundRect(x, x, b, b, rad);
+                                ctx.fill();
+                            } else {
+                                ctx.fillRect(x, x, b, b);
+                            }
+                            const pad = Math.round(b * 0.08);
+                            ctx.drawImage(badge, x + pad, x + pad, b - 2 * pad, b - 2 * pad);
+                            finalize();
+                        };
+                        badge.onerror = finalize; // no logo? still produce a plain QR
+                        badge.src = '../assets/qr-badge.svg';
                     } catch (err) {
                         setStatus(status, 'Could not generate the QR code: ' + err.message, false);
                     }
