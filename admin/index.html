@@ -387,21 +387,56 @@
                     : `<tr><td colspan="2" style="color: var(--muted);">No ${label} yet.</td></tr>`;
 
                 el.innerHTML = `
-                    <div class="stat-row">
-                        <div class="stat"><div class="num">${s.total30}</div><div class="lbl">Page views — last 30 days</div></div>
-                        <div class="stat"><div class="num">${s.prevMonthTotal}</div><div class="lbl">Views — previous month</div></div>
+                    <div class="tabs" id="statSubtabs" style="margin-bottom: 22px;">
+                        <button class="tab active" data-st="overview" style="font-size:0.85rem; padding:8px 12px;">Overview</button>
+                        <button class="tab" data-st="pages" style="font-size:0.85rem; padding:8px 12px;">Pages</button>
+                        <button class="tab" data-st="sources" style="font-size:0.85rem; padding:8px 12px;">Sources</button>
+                        <button class="tab" data-st="campaigns" style="font-size:0.85rem; padding:8px 12px;">Campaigns</button>
+                        <button class="tab" data-st="tools" style="font-size:0.85rem; padding:8px 12px;">Link &amp; QR</button>
+                        <button class="tab" data-st="history" style="font-size:0.85rem; padding:8px 12px;">History</button>
                     </div>
-                    <div style="display:flex; gap:2px; height:120px; align-items:stretch; margin: 10px 0 30px; border-bottom: 1px solid var(--line); padding-bottom: 2px;">${bars}</div>
-                    <h2 style="font-size:1.05rem; margin-bottom:10px;">Top pages this month</h2>
-                    <table class="subs" style="margin-bottom:26px;"><tbody>${list(s.topPages, 'views')}</tbody></table>
-                    <h2 style="font-size:1.05rem; margin-bottom:10px;">Traffic sources this month</h2>
-                    <table class="subs" style="margin-bottom:26px;"><tbody>${list(s.topReferrers, 'referrers')}</tbody></table>
 
-                    <h2 style="font-size:1.05rem; margin-bottom:10px;">Campaigns (UTM) this month</h2>
-                    <table class="subs"><tbody>${list(s.topCampaigns, 'campaign visits')}</tbody></table>
+                    <div id="st-overview">
+                        <div class="stat-row">
+                            <div class="stat"><div class="num">${s.total30}</div><div class="lbl">Page views — last 30 days</div></div>
+                            <div class="stat"><div class="num">${s.prevMonthTotal}</div><div class="lbl">Views — previous month</div></div>
+                        </div>
+                        <div style="display:flex; gap:2px; height:120px; align-items:stretch; margin: 10px 0 10px; border-bottom: 1px solid var(--line); padding-bottom: 2px;">${bars}</div>
+                        <p style="color: var(--muted); font-size: 0.8rem;">Daily views, last 30 days. Hover a bar for the exact date.</p>
+                    </div>
 
-                    <h2 style="font-size:1.05rem; margin: 30px 0 6px;">Campaign link generator</h2>
-                    <p style="color: var(--muted); font-size: 0.85rem; margin-bottom: 12px;">Build a link for a post or campaign — visits through it appear in the Campaigns table above.</p>
+                    <div id="st-pages" class="hidden">
+                        <h2 style="font-size:1.05rem; margin-bottom:10px;">Top pages this month</h2>
+                        <table class="subs"><tbody>${list(s.topPages, 'views')}</tbody></table>
+                    </div>
+
+                    <div id="st-sources" class="hidden">
+                        <h2 style="font-size:1.05rem; margin-bottom:10px;">Traffic sources this month</h2>
+                        <table class="subs"><tbody>${list(s.topReferrers, 'referrers')}</tbody></table>
+                        <p style="color: var(--muted); font-size: 0.8rem; margin-top: 12px;">Where visitors came from, as reported by their browser. Direct visits (typed address, bookmarks) don't send a source.</p>
+                    </div>
+
+                    <div id="st-campaigns" class="hidden">
+                        <h2 style="font-size:1.05rem; margin-bottom:10px;">Campaigns (UTM) this month</h2>
+                        <table class="subs"><tbody>${list(s.topCampaigns, 'campaign visits')}</tbody></table>
+                        <p style="color: var(--muted); font-size: 0.8rem; margin-top: 12px;">Visits through links made in the Link &amp; QR tab — exact attribution per post, campaign or QR code.</p>
+                    </div>
+
+                    <div id="st-tools" class="hidden">
+                    <div class="help-row">
+                        <h2 style="font-size:1.05rem; margin: 0;">Campaign link generator</h2>
+                        <button type="button" class="help-btn" id="help-utm-btn" aria-label="How do I set this up?">?</button>
+                    </div>
+                    <div class="help-box" id="help-utm">
+                        <strong style="color: var(--text);">How to build a campaign link — 3 fields:</strong>
+                        <ol>
+                            <li><strong>Page</strong> — which page of the site the link opens. Pick from the list (e.g. <code>/</code> for the homepage, <code>/services/mot-testing</code> for the MOT page).</li>
+                            <li><strong>Source</strong> — where you'll share the link: <code>facebook</code> for a Facebook post, <code>newsletter</code> for an email, <code>qr-code</code> for printed QR codes. This name appears in the Campaigns page, so keep it consistent.</li>
+                            <li><strong>Campaign</strong> (optional) — a label for the specific push, e.g. <code>mot-launch</code> or <code>winter-checks</code>. Use it when you run several posts from the same source and want to compare them.</li>
+                        </ol>
+                        <p style="margin-top:8px;">Example: Page <code>/services/mot-testing</code> + Source <code>facebook</code> + Campaign <code>mot-launch</code> &rarr; every click on that post shows up as <em>facebook / mot-launch</em>. Then press <strong>Save</strong> to keep the link for later.</p>
+                    </div>
+                    <p style="color: var(--muted); font-size: 0.85rem; margin: 8px 0 12px;">Build a link for a post or campaign — visits through it appear in the Campaigns page.</p>
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-bottom:10px;">
                         <div class="field" style="margin:0;">
                             <label for="utm-page">Page</label>
@@ -432,6 +467,7 @@
                         <input id="utm-result" readonly style="flex:1; padding:10px 14px; border-radius:8px; background: var(--bg-2); border:1.5px solid var(--line); color: var(--green); font-family: monospace; font-size:0.85rem;">
                         <button class="btn" id="utm-copy" style="border:none; cursor:pointer; font-family:inherit;">Copy</button>
                         <button class="btn btn-outline" id="qr-make" style="cursor:pointer; font-family:inherit;">QR code</button>
+                        <button class="btn btn-outline" id="utm-save" style="cursor:pointer; font-family:inherit;">Save</button>
                     </div>
                     <div class="form-status" id="utmStatus"></div>
                     <div id="qr-box" class="hidden" style="margin-top:16px; text-align:center; background:#ffffff; border-radius:12px; padding:22px; max-width:300px;">
@@ -441,12 +477,28 @@
                         </div>
                     </div>
 
-                    <h2 style="font-size:1.05rem; margin: 30px 0 10px;">History by year</h2>
-                    <div id="yearBtns" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
-                        ${(s.years || []).map((y) => `<button class="tab" data-year="${y}" style="border:1.5px solid var(--line); border-radius:8px;">${y}</button>`).join('') || '<span style="color:var(--muted); font-size:0.9rem;">Data starts collecting from today — years will appear here.</span>'}
+                    <h2 style="font-size:1.05rem; margin: 28px 0 10px;">Saved links &amp; QR codes</h2>
+                    <div id="savedLinks"><p style="color: var(--muted); font-size: 0.9rem;">Loading…</p></div>
                     </div>
-                    <div id="yearView"></div>
-                    <p style="color: var(--muted); font-size: 0.8rem; margin-top: 18px;">History is kept for 5 years, separated per year. Privacy-friendly: no cookies, no IP addresses, no personal data stored.</p>`;
+
+                    <div id="st-history" class="hidden">
+                        <h2 style="font-size:1.05rem; margin: 0 0 10px;">History by year</h2>
+                        <div id="yearBtns" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+                            ${(s.years || []).map((y) => `<button class="tab" data-year="${y}" style="border:1.5px solid var(--line); border-radius:8px;">${y}</button>`).join('') || '<span style="color:var(--muted); font-size:0.9rem;">Data starts collecting from today — years will appear here.</span>'}
+                        </div>
+                        <div id="yearView"></div>
+                        <p style="color: var(--muted); font-size: 0.8rem; margin-top: 18px;">History is kept for 5 years, separated per year.</p>
+                    </div>
+
+                    <p style="color: var(--muted); font-size: 0.8rem; margin-top: 22px;">Privacy-friendly: no cookies, no IP addresses, no personal data stored.</p>`;
+
+                // Sub-tab switching
+                document.querySelectorAll('#statSubtabs .tab').forEach((t) => t.addEventListener('click', () => {
+                    document.querySelectorAll('#statSubtabs .tab').forEach((x) => x.classList.remove('active'));
+                    t.classList.add('active');
+                    ['overview', 'pages', 'sources', 'campaigns', 'tools', 'history'].forEach((name) =>
+                        document.getElementById('st-' + name).classList.toggle('hidden', t.dataset.st !== name));
+                }));
 
                 // UTM generator
                 const slug = (v) => v.trim().toLowerCase().replace(/[^a-z0-9 _.\-]/g, '').replace(/\s+/g, '-').slice(0, 40);
@@ -474,15 +526,18 @@
                     }
                 });
 
-                // QR code from the campaign link
-                document.getElementById('qr-make').addEventListener('click', () => {
+                // Help popup for the generator
+                document.getElementById('help-utm-btn').addEventListener('click', () =>
+                    document.getElementById('help-utm').classList.toggle('open'));
+
+                // QR rendering (reused by the generator and by saved links)
+                const renderQr = (url, filename) => {
                     const status = document.getElementById('utmStatus');
                     if (typeof qrcode !== 'function') {
                         setStatus(status, 'QR library could not load — check your connection and refresh.', false);
                         return;
                     }
                     try {
-                        const url = document.getElementById('utm-result').value;
                         const qr = qrcode(0, 'M');
                         qr.addData(url);
                         qr.make();
@@ -509,13 +564,81 @@
                         document.getElementById('qr-img').src = png;
                         const dl = document.getElementById('qr-download');
                         dl.href = png;
-                        const src = document.getElementById('utm-source').value.trim() || 'link';
-                        const cmp = document.getElementById('utm-campaign').value.trim();
-                        dl.download = `qr-${src}${cmp ? '-' + cmp : ''}.png`;
+                        dl.download = filename;
                         document.getElementById('qr-box').classList.remove('hidden');
                         setStatus(status, 'QR generated — scan it to test, download for print.', true);
                     } catch (err) {
                         setStatus(status, 'Could not generate the QR code: ' + err.message, false);
+                    }
+                };
+
+                const qrName = (src, cmp) => `qr-${src || 'link'}${cmp ? '-' + cmp : ''}.png`;
+
+                document.getElementById('qr-make').addEventListener('click', () => renderQr(
+                    document.getElementById('utm-result').value,
+                    qrName(slug(document.getElementById('utm-source').value),
+                           slug(document.getElementById('utm-campaign').value))));
+
+                // Saved links & QR codes
+                async function loadSavedLinks() {
+                    const box = document.getElementById('savedLinks');
+                    try {
+                        const d = await fetch('/api/admin/links').then((r) => r.json());
+                        if (!d.configured) {
+                            box.innerHTML = '<p style="color: var(--muted); font-size: 0.9rem;">Statistics storage is not connected yet.</p>';
+                            return;
+                        }
+                        box.innerHTML = d.links.map((l) => `
+                            <div class="task-row">
+                                <div style="flex:1; min-width:0;">
+                                    <div style="color: var(--text); font-size: 0.9rem;">${(l.source || 'link')}${l.campaign ? ' / ' + l.campaign : ''} <span style="color: var(--muted); font-size: 0.78rem;">&mdash; ${l.created}</span></div>
+                                    <div style="color: var(--muted); font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${l.url}</div>
+                                </div>
+                                <button class="btn" data-copy="${l.url}" style="border:none; cursor:pointer; font-family:inherit; font-size:0.8rem; padding:6px 12px;">Copy</button>
+                                <button class="btn btn-outline" data-qrurl="${l.url}" data-qrname="${qrName(l.source, l.campaign)}" style="cursor:pointer; font-family:inherit; font-size:0.8rem; padding:6px 12px;">QR</button>
+                                <button class="t-del" data-del="${l.id}" title="Remove">&#10005;</button>
+                            </div>`).join('') || '<p style="color: var(--muted); font-size: 0.9rem;">No saved links yet — build one above and press Save.</p>';
+
+                        box.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', async () => {
+                            try { await navigator.clipboard.writeText(b.dataset.copy);
+                                  setStatus(document.getElementById('utmStatus'), 'Link copied to clipboard.', true); } catch {}
+                        }));
+                        box.querySelectorAll('[data-qrurl]').forEach((b) => b.addEventListener('click', () =>
+                            renderQr(b.dataset.qrurl, b.dataset.qrname)));
+                        box.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', async () => {
+                            await fetch('/api/admin/links', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ action: 'delete', id: b.dataset.del }),
+                            });
+                            loadSavedLinks();
+                        }));
+                    } catch {
+                        box.innerHTML = '<p style="color:#c0705a; font-size:0.9rem;">Could not load saved links.</p>';
+                    }
+                }
+                loadSavedLinks();
+
+                document.getElementById('utm-save').addEventListener('click', async () => {
+                    const status = document.getElementById('utmStatus');
+                    try {
+                        const r = await fetch('/api/admin/links', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'add',
+                                url: document.getElementById('utm-result').value,
+                                page: document.getElementById('utm-page').value.trim(),
+                                source: slug(document.getElementById('utm-source').value),
+                                campaign: slug(document.getElementById('utm-campaign').value),
+                            }),
+                        });
+                        const data = await r.json();
+                        if (!r.ok) throw new Error(data.error || 'Could not save.');
+                        setStatus(status, 'Link saved — it stays in the list below.', true);
+                        loadSavedLinks();
+                    } catch (err) {
+                        setStatus(status, err.message, false);
                     }
                 });
 
