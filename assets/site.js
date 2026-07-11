@@ -57,7 +57,13 @@ fetch(prefix + 'settings.json')
 // Anonymous page-view beacon (no cookies, no personal data)
 try {
     if (location.protocol.startsWith('http')) {
-        const payload = JSON.stringify({ p: location.pathname, r: document.referrer || '' });
+        const q = new URLSearchParams(location.search);
+        const payload = JSON.stringify({
+            p: location.pathname,
+            r: document.referrer || '',
+            us: q.get('utm_source') || '',
+            uc: q.get('utm_campaign') || '',
+        });
         if (!(navigator.sendBeacon &&
               navigator.sendBeacon('/api/track', new Blob([payload], { type: 'application/json' })))) {
             fetch('/api/track', {

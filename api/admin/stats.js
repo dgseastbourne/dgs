@@ -10,6 +10,24 @@ export default async function handler(req, res) {
     }
 
     try {
+        // Yearly "sub-page": ?year=2026 -> monthly totals for that year only
+        const year = String(req.query.year || '');
+        if (/^\d{4}$/.test(year)) {
+            const keys = Array.from({ length: 12 }, (_, i) =>
+                `m:${year}-${String(i + 1).padStart(2, '0')}`);
+            const [values] = await redisPipeline([['MGET', ...keys]]);
+            const months = values.map((v, i) => ({
+                month: i + 1,
+                views: parseInt(v, 10) || 0,
+            }));
+            return res.status(200).json({
+                configured: true,
+                year,
+                months,
+                total: months.reduce((s, m) => s + m.views, 0),
+            });
+        }
+
         const days = [];
         for (let i = 29; i >= 0; i--) {
             days.push(new Date(Date.now() - i * 24 * 3600 * 1000).toISOString().slice(0, 10));
@@ -23,6 +41,8 @@ export default async function handler(req, res) {
             ['HGETALL', `pm:${month}`],
             ['HGETALL', `rm:${month}`],
             ['HGETALL', `pm:${prevMonth}`],
+            ['HGETALL', `cm:${month}`],
+            ['SMEMBERS', 'stat-years'],
         ]);
 
         const daily = days.map((d, i) => ({ date: d, views: parseInt(results[0][i], 10) || 0 }));
@@ -44,6 +64,8 @@ export default async function handler(req, res) {
             topPages: toPairs(results[1]),
             topReferrers: toPairs(results[2]),
             prevMonthTotal: prevTotal,
+            topCampaigns: toPairs(results[4]),
+            years: (results[5] || []).sort().reverse(),
         });
     } catch (err) {
         console.error('stats failed:', err);

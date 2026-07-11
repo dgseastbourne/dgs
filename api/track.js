@@ -2,13 +2,14 @@
 import { redisConfig, redisPipeline } from './_redis.js';
 
 const YEAR = 366 * 24 * 3600;
+const FIVE_YEARS = 5 * YEAR;
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
     if (!redisConfig()) return res.status(200).json({ ok: false }); // storage not connected yet
 
     try {
-        const { p, r } = req.body || {};
+        const { p, r, us, uc } = req.body || {};
         const path = String(p || '/').slice(0, 120);
         if (!/^\/[a-zA-Z0-9\-_/.]*$/.test(path)) return res.status(200).json({ ok: false });
         if (path.startsWith('/admin')) return res.status(200).json({ ok: true }); // don't count admin
@@ -26,8 +27,23 @@ export default async function handler(req, res) {
         const cmds = [
             ['INCR', `v:${day}`], ['EXPIRE', `v:${day}`, YEAR],
             ['HINCRBY', `pm:${month}`, path, 1], ['EXPIRE', `pm:${month}`, YEAR],
+            // long-term history: monthly totals kept 5 years, per year
+            ['INCR', `m:${month}`], ['EXPIRE', `m:${month}`, FIVE_YEARS],
+            ['SADD', 'stat-years', month.slice(0, 4)], ['EXPIRE', 'stat-years', FIVE_YEARS],
         ];
         if (ref) cmds.push(['HINCRBY', `rm:${month}`, ref, 1], ['EXPIRE', `rm:${month}`, YEAR]);
+
+        // UTM campaign attribution (from links generated in the admin)
+        const clean = (v) => {
+            const s = String(v || '').trim().toLowerCase().slice(0, 40);
+            return /^[a-z0-9][a-z0-9 _.\-]*$/.test(s) ? s : '';
+        };
+        const source = clean(us);
+        const campaign = clean(uc);
+        if (source) {
+            const label = campaign ? `${source} / ${campaign}` : source;
+            cmds.push(['HINCRBY', `cm:${month}`, label, 1], ['EXPIRE', `cm:${month}`, YEAR]);
+        }
         await redisPipeline(cmds);
         return res.status(200).json({ ok: true });
     } catch (err) {

@@ -394,8 +394,96 @@
                     <h2 style="font-size:1.05rem; margin-bottom:10px;">Top pages this month</h2>
                     <table class="subs" style="margin-bottom:26px;"><tbody>${list(s.topPages, 'views')}</tbody></table>
                     <h2 style="font-size:1.05rem; margin-bottom:10px;">Traffic sources this month</h2>
-                    <table class="subs"><tbody>${list(s.topReferrers, 'referrers')}</tbody></table>
-                    <p style="color: var(--muted); font-size: 0.8rem; margin-top: 18px;">Privacy-friendly: no cookies, no IP addresses, no personal data stored.</p>`;
+                    <table class="subs" style="margin-bottom:26px;"><tbody>${list(s.topReferrers, 'referrers')}</tbody></table>
+
+                    <h2 style="font-size:1.05rem; margin-bottom:10px;">Campaigns (UTM) this month</h2>
+                    <table class="subs"><tbody>${list(s.topCampaigns, 'campaign visits')}</tbody></table>
+
+                    <h2 style="font-size:1.05rem; margin: 30px 0 6px;">Campaign link generator</h2>
+                    <p style="color: var(--muted); font-size: 0.85rem; margin-bottom: 12px;">Build a link for a post or campaign — visits through it appear in the Campaigns table above.</p>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <div class="field" style="margin:0;">
+                            <label for="utm-page">Page</label>
+                            <input id="utm-page" list="utm-pages" value="/" placeholder="/">
+                            <datalist id="utm-pages">
+                                <option value="/"></option><option value="/faq"></option>
+                                <option value="/services/mot-testing"></option><option value="/services/servicing"></option>
+                                <option value="/services/repairs"></option><option value="/services/diagnostics"></option>
+                                <option value="/services/brakes-clutches"></option><option value="/services/tyres-alignment"></option>
+                                <option value="/services/batteries-electrics"></option><option value="/services/exhausts-suspension"></option>
+                            </datalist>
+                        </div>
+                        <div class="field" style="margin:0;">
+                            <label for="utm-source">Source</label>
+                            <input id="utm-source" list="utm-sources" placeholder="facebook">
+                            <datalist id="utm-sources">
+                                <option value="facebook"></option><option value="instagram"></option>
+                                <option value="whatsapp"></option><option value="newsletter"></option>
+                                <option value="google-business"></option><option value="qr-code"></option>
+                            </datalist>
+                        </div>
+                        <div class="field" style="margin:0;">
+                            <label for="utm-campaign">Campaign (optional)</label>
+                            <input id="utm-campaign" placeholder="mot-launch">
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <input id="utm-result" readonly style="flex:1; padding:10px 14px; border-radius:8px; background: var(--bg-2); border:1.5px solid var(--line); color: var(--green); font-family: monospace; font-size:0.85rem;">
+                        <button class="btn" id="utm-copy" style="border:none; cursor:pointer; font-family:inherit;">Copy</button>
+                    </div>
+                    <div class="form-status" id="utmStatus"></div>
+
+                    <h2 style="font-size:1.05rem; margin: 30px 0 10px;">History by year</h2>
+                    <div id="yearBtns" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+                        ${(s.years || []).map((y) => `<button class="tab" data-year="${y}" style="border:1.5px solid var(--line); border-radius:8px;">${y}</button>`).join('') || '<span style="color:var(--muted); font-size:0.9rem;">Data starts collecting from today — years will appear here.</span>'}
+                    </div>
+                    <div id="yearView"></div>
+                    <p style="color: var(--muted); font-size: 0.8rem; margin-top: 18px;">History is kept for 5 years, separated per year. Privacy-friendly: no cookies, no IP addresses, no personal data stored.</p>`;
+
+                // UTM generator
+                const slug = (v) => v.trim().toLowerCase().replace(/[^a-z0-9 _.\-]/g, '').replace(/\s+/g, '-').slice(0, 40);
+                const buildUtm = () => {
+                    const page = document.getElementById('utm-page').value.trim() || '/';
+                    const source = slug(document.getElementById('utm-source').value);
+                    const campaign = slug(document.getElementById('utm-campaign').value);
+                    let url = location.origin + (page.startsWith('/') ? page : '/' + page);
+                    if (source) {
+                        url += '?utm_source=' + encodeURIComponent(source);
+                        if (campaign) url += '&utm_campaign=' + encodeURIComponent(campaign);
+                    }
+                    document.getElementById('utm-result').value = url;
+                };
+                ['utm-page', 'utm-source', 'utm-campaign'].forEach((id) =>
+                    document.getElementById(id).addEventListener('input', buildUtm));
+                buildUtm();
+                document.getElementById('utm-copy').addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(document.getElementById('utm-result').value);
+                        setStatus(document.getElementById('utmStatus'), 'Link copied to clipboard.', true);
+                    } catch {
+                        document.getElementById('utm-result').select();
+                        setStatus(document.getElementById('utmStatus'), 'Press Cmd/Ctrl+C to copy.', true);
+                    }
+                });
+
+                document.querySelectorAll('#yearBtns button').forEach((b) => b.addEventListener('click', async () => {
+                    document.querySelectorAll('#yearBtns button').forEach((x) => x.style.borderColor = 'var(--line)');
+                    b.style.borderColor = 'var(--green)';
+                    const yv = document.getElementById('yearView');
+                    yv.innerHTML = '<p style="color:var(--muted)">Loading…</p>';
+                    const yr = await fetch('/api/admin/stats?year=' + b.dataset.year).then((r) => r.json());
+                    const ymax = Math.max(...yr.months.map((m) => m.views), 1);
+                    const mNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    yv.innerHTML = `
+                        <div class="stat" style="max-width:220px; margin-bottom:14px;"><div class="num">${yr.total}</div><div class="lbl">Total views in ${yr.year}</div></div>
+                        <div style="display:flex; gap:6px; height:130px; align-items:stretch;">
+                            ${yr.months.map((m) => `
+                                <div title="${mNames[m.month - 1]} ${yr.year}: ${m.views} views" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; text-align:center;">
+                                    <div style="background:var(--green); border-radius:3px 3px 0 0; min-height:2px; height:${Math.round((m.views / ymax) * 82)}%;"></div>
+                                    <div style="font-size:0.65rem; color:var(--muted); margin-top:4px;">${mNames[m.month - 1]}</div>
+                                </div>`).join('')}
+                        </div>`;
+                }));
             } catch (err) {
                 el.innerHTML = `<p style="color:#c0705a;">${err.message}</p>`;
             }
