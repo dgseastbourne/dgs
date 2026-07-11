@@ -66,6 +66,22 @@ export default async function handler(req, res) {
             }
             updates.siteUrl = v;
         }
+        if ('waMessage' in body) {
+            const v = String(body.waMessage || '').trim();
+            if (v.length > 200) {
+                return res.status(400).json({ error: 'The WhatsApp message is too long (max 200 characters).' });
+            }
+            updates.waMessage = v;
+        }
+        for (const key of ['facebook', 'google']) {
+            if (key in body) {
+                const v = String(body[key] || '').trim();
+                if (v && !/^https:\/\/[^\s"<>]{4,300}$/.test(v)) {
+                    return res.status(400).json({ error: `The ${key === 'facebook' ? 'Facebook' : 'Google'} link must start with https://` });
+                }
+                updates[key] = v;
+            }
+        }
         if (!Object.keys(updates).length) {
             return res.status(400).json({ error: 'Nothing to save.' });
         }

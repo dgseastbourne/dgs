@@ -124,6 +124,7 @@
 
             <div class="tabs">
                 <button class="tab active" data-tab="subs">Subscribers</button>
+                <button class="tab" data-tab="stats">Statistics</button>
                 <button class="tab" data-tab="settings">Site settings</button>
                 <button class="tab" data-tab="progress">Progress</button>
             </div>
@@ -139,12 +140,31 @@
                 </table>
             </div>
 
+            <div id="tab-stats" class="hidden">
+                <div id="statsBody"><p style="color: var(--muted);">Loading…</p></div>
+            </div>
+
             <div id="tab-settings" class="hidden">
                 <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 18px;">Changes go live automatically in about a minute.</p>
                 <form id="settingsForm">
                     <div class="field">
                         <label for="set-wa">WhatsApp number (international format, no +)</label>
                         <input id="set-wa" name="whatsapp" type="text" placeholder="e.g. 447815981647" required pattern="[0-9 +\-()]{8,20}">
+                    </div>
+
+                    <div class="field">
+                        <label for="set-wamsg">WhatsApp pre-filled message (what visitors see when the chat opens)</label>
+                        <input id="set-wamsg" name="waMessage" type="text" maxlength="200" placeholder="Hi! I'd like to book my car in.">
+                    </div>
+
+                    <div class="field">
+                        <label for="set-fb">Facebook page link</label>
+                        <input id="set-fb" name="facebook" type="url" placeholder="https://www.facebook.com/...">
+                    </div>
+
+                    <div class="field">
+                        <label for="set-gl">Google Business profile link</label>
+                        <input id="set-gl" name="google" type="url" placeholder="https://share.google/... or Google Maps link">
                     </div>
 
                     <div class="field">
@@ -239,6 +259,14 @@
 
                 <button class="btn" id="saveProgressBtn" style="border: none; cursor: pointer; font-family: inherit; font-size: 1rem; margin-top: 20px;">Save changes</button>
                 <div class="form-status" id="progressStatus"></div>
+
+                <hr style="border: none; border-top: 1px solid var(--line); margin: 30px 0;">
+                <h2 style="font-size: 1.15rem; margin-bottom: 6px;">Monthly client report</h2>
+                <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 14px;">
+                    A summary email (subscribers, enquiries, work done, what's next) is sent automatically on the 1st of every month. You can also send it now.
+                </p>
+                <button class="btn btn-outline" id="sendReportBtn" style="cursor: pointer; font-family: inherit; font-size: 0.95rem;">Send report now</button>
+                <div class="form-status" id="reportStatus"></div>
             </div>
         </div>
 
@@ -283,6 +311,9 @@
                     const { settings } = await sr.json();
                     if (settings) {
                         document.getElementById('set-wa').value = settings.whatsapp || '';
+                        document.getElementById('set-wamsg').value = settings.waMessage || '';
+                        document.getElementById('set-fb').value = settings.facebook || '';
+                        document.getElementById('set-gl').value = settings.google || '';
                         document.getElementById('set-url').value = settings.siteUrl || '';
                         document.getElementById('set-ga').value = settings.ga4Id || '';
                         document.getElementById('set-gsc').value = settings.gscToken || '';
@@ -291,6 +322,7 @@
                 }
             } catch {}
             loadProgress();
+            loadStats();
             return true;
         }
 
@@ -319,9 +351,55 @@
         document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
             t.classList.add('active');
-            ['subs', 'settings', 'progress'].forEach((name) =>
+            ['subs', 'stats', 'settings', 'progress'].forEach((name) =>
                 document.getElementById('tab-' + name).classList.toggle('hidden', t.dataset.tab !== name));
         }));
+
+        // ----- Statistics tab -----
+        async function loadStats() {
+            const el = document.getElementById('statsBody');
+            try {
+                const r = await fetch('/api/admin/stats');
+                if (!r.ok) throw new Error('Could not load statistics.');
+                const s = await r.json();
+
+                if (!s.configured) {
+                    el.innerHTML = `<div class="help-box open">
+                        <strong style="color: var(--text);">Statistics storage isn't connected yet.</strong>
+                        <ol>
+                            <li>In Vercel open the project &rarr; <em>Storage</em> &rarr; <em>Browse Storage</em> &rarr; choose <strong>Upstash</strong> (Serverless DB — Redis) &rarr; free plan</li>
+                            <li>Connect it to this project — Vercel adds the credentials automatically</li>
+                            <li>Redeploy (or wait for the next deploy). Views start counting from that moment</li>
+                        </ol>
+                    </div>`;
+                    return;
+                }
+
+                const max = Math.max(...s.daily.map((d) => d.views), 1);
+                const bars = s.daily.map((d) => `
+                    <div title="${d.date}: ${d.views} views" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end;">
+                        <div style="background: var(--green); border-radius: 3px 3px 0 0; min-height: 2px; height: ${Math.round((d.views / max) * 100)}%;"></div>
+                    </div>`).join('');
+
+                const list = (items, label) => items.length
+                    ? items.map((x) => `<tr><td>${x.key.replace(/</g, '&lt;')}</td><td style="text-align:right; color: var(--text);">${x.count}</td></tr>`).join('')
+                    : `<tr><td colspan="2" style="color: var(--muted);">No ${label} yet.</td></tr>`;
+
+                el.innerHTML = `
+                    <div class="stat-row">
+                        <div class="stat"><div class="num">${s.total30}</div><div class="lbl">Page views — last 30 days</div></div>
+                        <div class="stat"><div class="num">${s.prevMonthTotal}</div><div class="lbl">Views — previous month</div></div>
+                    </div>
+                    <div style="display:flex; gap:2px; height:120px; align-items:stretch; margin: 10px 0 30px; border-bottom: 1px solid var(--line); padding-bottom: 2px;">${bars}</div>
+                    <h2 style="font-size:1.05rem; margin-bottom:10px;">Top pages this month</h2>
+                    <table class="subs" style="margin-bottom:26px;"><tbody>${list(s.topPages, 'views')}</tbody></table>
+                    <h2 style="font-size:1.05rem; margin-bottom:10px;">Traffic sources this month</h2>
+                    <table class="subs"><tbody>${list(s.topReferrers, 'referrers')}</tbody></table>
+                    <p style="color: var(--muted); font-size: 0.8rem; margin-top: 18px;">Privacy-friendly: no cookies, no IP addresses, no personal data stored.</p>`;
+            } catch (err) {
+                el.innerHTML = `<p style="color:#c0705a;">${err.message}</p>`;
+            }
+        }
 
         // ----- Progress tab (changelog + roadmap) -----
         let progress = { changelog: [], roadmap: [] };
@@ -420,6 +498,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         whatsapp: e.target.whatsapp.value.trim(),
+                        waMessage: e.target.waMessage.value.trim(),
+                        facebook: e.target.facebook.value.trim(),
+                        google: e.target.google.value.trim(),
                         siteUrl: e.target.siteUrl.value.trim(),
                         ga4Id: e.target.ga4Id.value.trim(),
                         gscToken: e.target.gscToken.value.trim(),
@@ -433,6 +514,22 @@
                 setStatus(status, err.message, false);
             } finally {
                 btn.disabled = false; btn.textContent = 'Save settings';
+            }
+        });
+
+        document.getElementById('sendReportBtn').addEventListener('click', async () => {
+            const status = document.getElementById('reportStatus');
+            const btn = document.getElementById('sendReportBtn');
+            btn.disabled = true; btn.textContent = 'Sending…';
+            try {
+                const r = await fetch('/api/cron/monthly-report', { method: 'POST' });
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.error || 'Could not send.');
+                setStatus(status, data.message, true);
+            } catch (err) {
+                setStatus(status, err.message, false);
+            } finally {
+                btn.disabled = false; btn.textContent = 'Send report now';
             }
         });
 

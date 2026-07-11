@@ -1,7 +1,10 @@
 {
   "whatsapp": "447305255963",
+  "waMessage": "Hi! I'd like to book my car in.",
   "ga4Id": "",
   "gscToken": "",
   "bingToken": "",
-  "siteUrl": "https://dgs-lime.vercel.app"
+  "siteUrl": "https://dgs-lime.vercel.app",
+  "facebook": "https://www.facebook.com/DarrensGarageServices/",
+  "google": "https://share.google/oOB3fS1IdrR9UE4LA"
 }

@@ -1,0 +1,15 @@
+# Watches for dependency updates and opens PRs automatically.
+# The site currently has zero npm dependencies (by design) — this is a
+# safety net for the future: if packages are ever added, updates
+# (including major versions) will show up as PRs + GitHub notifications.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

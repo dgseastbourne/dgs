@@ -54,6 +54,21 @@ export default async function handler(req, res) {
         });
 
         if (r.ok) {
+            // CRM: also store the lead in Brevo (non-blocking, optional)
+            const brevoKey = process.env.BREVO_API_KEY;
+            const leadsList = parseInt(process.env.BREVO_LEADS_LIST_ID, 10);
+            if (brevoKey && leadsList) {
+                fetch('https://api.brevo.com/v3/contacts', {
+                    method: 'POST',
+                    headers: { 'api-key': brevoKey, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email,
+                        listIds: [leadsList],
+                        updateEnabled: true,
+                        attributes: { FIRSTNAME: String(name).slice(0, 100) },
+                    }),
+                }).catch((e) => console.error('Lead save failed:', e));
+            }
             return res.status(200).json({ ok: true });
         }
         const data = await r.json().catch(() => ({}));

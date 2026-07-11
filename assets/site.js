@@ -16,13 +16,17 @@ fetch(prefix + 'settings.json')
     .then((s) => {
         if (!s) return;
 
-        // WhatsApp links
+        // WhatsApp links (number + pre-filled message)
         if (/^\d{8,15}$/.test(s.whatsapp || '')) {
-            const text = encodeURIComponent("Hi! I'd like to book my car in.");
+            const text = encodeURIComponent(s.waMessage || "Hi! I'd like to book my car in.");
             document.querySelectorAll('.wa-link').forEach((a) => {
                 a.href = `https://wa.me/${s.whatsapp}?text=${text}`;
             });
         }
+
+        // Social links
+        if (s.facebook) document.querySelectorAll('.soc-fb').forEach((a) => { a.href = s.facebook; });
+        if (s.google) document.querySelectorAll('.soc-g').forEach((a) => { a.href = s.google; });
 
         // Google Analytics 4
         if (/^G-[A-Z0-9]{4,14}$/.test(s.ga4Id || '')) {
@@ -49,6 +53,22 @@ fetch(prefix + 'settings.json')
         addMeta('msvalidate.01', s.bingToken);
     })
     .catch(() => {});
+
+// Anonymous page-view beacon (no cookies, no personal data)
+try {
+    if (location.protocol.startsWith('http')) {
+        const payload = JSON.stringify({ p: location.pathname, r: document.referrer || '' });
+        if (!(navigator.sendBeacon &&
+              navigator.sendBeacon('/api/track', new Blob([payload], { type: 'application/json' })))) {
+            fetch('/api/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: payload,
+                keepalive: true,
+            }).catch(() => {});
+        }
+    }
+} catch {}
 
 // Animated stat counters
 const counters = document.querySelectorAll('.stat .num[data-count]');
