@@ -780,9 +780,8 @@
                 renderProgress();
             }));
 
-            document.getElementById('changelogList').innerHTML = progress.changelog.map((e) => `
-                <div class="log-date">${e.date}</div>
-                ${e.items.map((i) => `<div class="log-item">${i.replace(/</g, '&lt;')}</div>`).join('')}`).join('');
+            document.getElementById('changelogList').innerHTML = progress.changelog.map((e) =>
+                e.items.map((i) => `<div class="log-item">${i.replace(/</g, '&lt;')}</div>`).join('')).join('');
         }
 
         async function loadProgress() {
