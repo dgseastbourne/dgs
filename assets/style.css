@@ -360,3 +360,34 @@ a.card { display: block; color: inherit; text-decoration: none; }
 .map-frame iframe {
     filter: invert(88%) hue-rotate(180deg) saturate(170%) brightness(108%) contrast(94%);
 }
+
+/* ---------- FAQ ---------- */
+details {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    margin-bottom: 12px; overflow: hidden;
+}
+details summary {
+    cursor: pointer; padding: 18px 22px; font-weight: 600; color: var(--text);
+    list-style: none; position: relative; padding-right: 48px;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::after {
+    content: "+"; position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+    color: var(--green); font-size: 1.4rem; font-weight: 400; transition: transform 0.2s;
+}
+details[open] summary::after { content: "\2212"; }
+details[open] { border-color: var(--green); }
+details p { padding: 0 22px 18px; color: var(--muted); font-size: 0.95rem; }
+
+/* ---------- Footer credit ---------- */
+.footer-links { margin-top: 14px; }
+.footer-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+.footer-links a:hover { color: var(--green); }
+.credit { margin-top: 10px; font-size: 0.85rem; color: var(--muted); }
+.credit .heart { color: #e0245e; }
+.credit a {
+    font-weight: 700; text-decoration: none;
+    background: linear-gradient(90deg, #4f9cf9, #8b5cf6);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.credit a:hover { filter: brightness(1.2); }

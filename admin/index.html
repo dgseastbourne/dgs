@@ -58,6 +58,34 @@
         .help-box ol { margin: 6px 0 0 18px; }
         .help-box li { margin-bottom: 6px; }
         .help-box a { color: var(--green); }
+
+        /* Progress tab */
+        .task-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0; border-bottom: 1px solid var(--line);
+        }
+        .task-row .t-title { flex: 1; color: var(--text); font-size: 0.95rem; }
+        .task-row.done .t-title { color: var(--muted); text-decoration: line-through; }
+        .task-row select {
+            background: var(--bg-2); color: var(--text); border: 1.5px solid var(--line);
+            border-radius: 6px; padding: 6px 10px; font-family: inherit; font-size: 0.85rem;
+        }
+        .task-row .t-del {
+            background: none; border: none; color: var(--muted); cursor: pointer;
+            font-size: 1rem; padding: 4px 8px;
+        }
+        .task-row .t-del:hover { color: #c0705a; }
+        .log-date {
+            color: var(--green); font-weight: 700; font-size: 0.85rem;
+            text-transform: uppercase; letter-spacing: 1px; margin: 22px 0 8px;
+        }
+        .log-item {
+            position: relative; padding: 6px 0 6px 22px; color: var(--muted); font-size: 0.93rem;
+        }
+        .log-item::before {
+            content: ""; position: absolute; left: 4px; top: 13px;
+            width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+        }
     </style>
 </head>
 <body>
@@ -97,6 +125,7 @@
             <div class="tabs">
                 <button class="tab active" data-tab="subs">Subscribers</button>
                 <button class="tab" data-tab="settings">Site settings</button>
+                <button class="tab" data-tab="progress">Progress</button>
             </div>
 
             <div id="tab-subs">
@@ -116,6 +145,22 @@
                     <div class="field">
                         <label for="set-wa">WhatsApp number (international format, no +)</label>
                         <input id="set-wa" name="whatsapp" type="text" placeholder="e.g. 447815981647" required pattern="[0-9 +\-()]{8,20}">
+                    </div>
+
+                    <div class="field">
+                        <div class="help-row">
+                            <label for="set-url" style="margin-bottom: 0;">Site address (domain)</label>
+                            <button type="button" class="help-btn" data-help="help-url" aria-label="How does this work?">?</button>
+                        </div>
+                        <div class="help-box" id="help-url">
+                            <strong style="color: var(--text);">When you connect a custom domain:</strong>
+                            <ol>
+                                <li>First add the domain to the project in Vercel (Settings &rarr; Domains) and follow the DNS steps</li>
+                                <li>Once the domain is live, change the address here (e.g. <code>https://www.darrensgarage.co.uk</code>)</li>
+                                <li>Saving rewrites every page's SEO data (canonical links, social previews, business schema, sitemap) in one go — live in about a minute</li>
+                            </ol>
+                        </div>
+                        <input id="set-url" name="siteUrl" type="url" placeholder="https://www.example.co.uk" style="margin-top: 8px;">
                     </div>
 
                     <div class="field">
@@ -174,6 +219,27 @@
                     <div class="form-status" id="settingsStatus"></div>
                 </form>
             </div>
+
+            <div id="tab-progress" class="hidden">
+                <h2 style="font-size: 1.15rem; margin-bottom: 14px;">Upcoming work</h2>
+                <div id="roadmapList"></div>
+                <div style="display: flex; gap: 10px; margin: 14px 0 34px;">
+                    <input id="newTask" type="text" placeholder="Add an upcoming task…"
+                           style="flex: 1; padding: 10px 14px; border-radius: 8px; background: var(--bg-2); border: 1.5px solid var(--line); color: var(--text); font-family: inherit;">
+                    <button class="btn" id="addTaskBtn" style="border: none; cursor: pointer; font-family: inherit;">Add</button>
+                </div>
+
+                <h2 style="font-size: 1.15rem; margin-bottom: 14px;">Work completed</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 18px;">
+                    <input id="newLogEntry" type="text" placeholder="Add a completed item (goes under today's date)…"
+                           style="flex: 1; padding: 10px 14px; border-radius: 8px; background: var(--bg-2); border: 1.5px solid var(--line); color: var(--text); font-family: inherit;">
+                    <button class="btn" id="addLogBtn" style="border: none; cursor: pointer; font-family: inherit;">Add</button>
+                </div>
+                <div id="changelogList"></div>
+
+                <button class="btn" id="saveProgressBtn" style="border: none; cursor: pointer; font-family: inherit; font-size: 1rem; margin-top: 20px;">Save changes</button>
+                <div class="form-status" id="progressStatus"></div>
+            </div>
         </div>
 
     </div>
@@ -217,12 +283,14 @@
                     const { settings } = await sr.json();
                     if (settings) {
                         document.getElementById('set-wa').value = settings.whatsapp || '';
+                        document.getElementById('set-url').value = settings.siteUrl || '';
                         document.getElementById('set-ga').value = settings.ga4Id || '';
                         document.getElementById('set-gsc').value = settings.gscToken || '';
                         document.getElementById('set-bing').value = settings.bingToken || '';
                     }
                 }
             } catch {}
+            loadProgress();
             return true;
         }
 
@@ -251,9 +319,90 @@
         document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
             t.classList.add('active');
-            document.getElementById('tab-subs').classList.toggle('hidden', t.dataset.tab !== 'subs');
-            document.getElementById('tab-settings').classList.toggle('hidden', t.dataset.tab !== 'settings');
+            ['subs', 'settings', 'progress'].forEach((name) =>
+                document.getElementById('tab-' + name).classList.toggle('hidden', t.dataset.tab !== name));
         }));
+
+        // ----- Progress tab (changelog + roadmap) -----
+        let progress = { changelog: [], roadmap: [] };
+
+        function renderProgress() {
+            const rl = document.getElementById('roadmapList');
+            rl.innerHTML = progress.roadmap.map((t, i) => `
+                <div class="task-row ${t.status === 'done' ? 'done' : ''}">
+                    <span class="t-title">${t.title.replace(/</g, '&lt;')}</span>
+                    <select data-i="${i}">
+                        <option value="planned" ${t.status === 'planned' ? 'selected' : ''}>Planned</option>
+                        <option value="in-progress" ${t.status === 'in-progress' ? 'selected' : ''}>In progress</option>
+                        <option value="done" ${t.status === 'done' ? 'selected' : ''}>Done</option>
+                    </select>
+                    <button class="t-del" data-i="${i}" title="Remove">&#10005;</button>
+                </div>`).join('') || '<p style="color: var(--muted); font-size: 0.9rem;">No upcoming tasks.</p>';
+
+            rl.querySelectorAll('select').forEach((s) => s.addEventListener('change', () => {
+                progress.roadmap[+s.dataset.i].status = s.value;
+                renderProgress();
+            }));
+            rl.querySelectorAll('.t-del').forEach((b) => b.addEventListener('click', () => {
+                progress.roadmap.splice(+b.dataset.i, 1);
+                renderProgress();
+            }));
+
+            document.getElementById('changelogList').innerHTML = progress.changelog.map((e) => `
+                <div class="log-date">${e.date}</div>
+                ${e.items.map((i) => `<div class="log-item">${i.replace(/</g, '&lt;')}</div>`).join('')}`).join('');
+        }
+
+        async function loadProgress() {
+            try {
+                const r = await fetch('/api/admin/changelog');
+                if (!r.ok) return;
+                progress = (await r.json()).data;
+                renderProgress();
+            } catch {}
+        }
+
+        document.getElementById('addTaskBtn').addEventListener('click', () => {
+            const inp = document.getElementById('newTask');
+            if (!inp.value.trim()) return;
+            progress.roadmap.push({ title: inp.value.trim(), status: 'planned' });
+            inp.value = '';
+            renderProgress();
+        });
+
+        document.getElementById('addLogBtn').addEventListener('click', () => {
+            const inp = document.getElementById('newLogEntry');
+            if (!inp.value.trim()) return;
+            const today = new Date().toISOString().slice(0, 10);
+            let group = progress.changelog.find((e) => e.date === today);
+            if (!group) {
+                group = { date: today, items: [] };
+                progress.changelog.unshift(group);
+            }
+            group.items.push(inp.value.trim());
+            inp.value = '';
+            renderProgress();
+        });
+
+        document.getElementById('saveProgressBtn').addEventListener('click', async () => {
+            const status = document.getElementById('progressStatus');
+            const btn = document.getElementById('saveProgressBtn');
+            btn.disabled = true; btn.textContent = 'Saving…';
+            try {
+                const r = await fetch('/api/admin/changelog', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(progress),
+                });
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.error || 'Could not save.');
+                setStatus(status, 'Saved.', true);
+            } catch (err) {
+                setStatus(status, err.message, false);
+            } finally {
+                btn.disabled = false; btn.textContent = 'Save changes';
+            }
+        });
 
         // Help popovers
         document.querySelectorAll('.help-btn').forEach((b) => b.addEventListener('click', () => {
@@ -271,6 +420,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         whatsapp: e.target.whatsapp.value.trim(),
+                        siteUrl: e.target.siteUrl.value.trim(),
                         ga4Id: e.target.ga4Id.value.trim(),
                         gscToken: e.target.gscToken.value.trim(),
                         bingToken: e.target.bingToken.value.trim(),

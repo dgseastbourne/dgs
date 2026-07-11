@@ -59,6 +59,13 @@ export default async function handler(req, res) {
                 updates[key] = v;
             }
         }
+        if ('siteUrl' in body && String(body.siteUrl || '').trim()) {
+            const v = String(body.siteUrl).trim().replace(/\/+$/, '');
+            if (!/^https:\/\/[a-z0-9][a-z0-9.-]+[a-z0-9]$/i.test(v)) {
+                return res.status(400).json({ error: 'Site address must look like https://www.example.co.uk (https only, no trailing slash).' });
+            }
+            updates.siteUrl = v;
+        }
         if (!Object.keys(updates).length) {
             return res.status(400).json({ error: 'Nothing to save.' });
         }
@@ -69,7 +76,17 @@ export default async function handler(req, res) {
             if (!cur.ok) throw new Error(`GitHub read ${cur.status}`);
             const { sha, content } = await cur.json();
             const settings = JSON.parse(Buffer.from(content, 'base64').toString());
+            const oldSiteUrl = settings.siteUrl || 'https://dgs-lime.vercel.app';
             Object.assign(settings, updates);
+
+            // Domain change: rewrite canonical/OG/schema/sitemap across the site in ONE commit
+            if (updates.siteUrl && updates.siteUrl !== oldSiteUrl) {
+                await rewriteSiteUrl(token, oldSiteUrl, updates.siteUrl, settings);
+                return res.status(200).json({
+                    ok: true, settings,
+                    message: 'Saved — the new address is being applied across the whole site (live in about a minute).',
+                });
+            }
 
             const put = await fetch(API, {
                 method: 'PUT',
@@ -97,4 +114,63 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
+}
+
+// Replaces the site base URL in every page + sitemap + robots + settings, as one git commit
+async function rewriteSiteUrl(token, oldUrl, newUrl, newSettings) {
+    const gh = (path, opts = {}) =>
+        fetch(`https://api.github.com/repos/${REPO}${path}`, {
+            ...opts,
+            headers: { ...ghHeaders(token), 'Content-Type': 'application/json', ...(opts.headers || {}) },
+        });
+
+    const ref = await (await gh('/git/ref/heads/master')).json();
+    const headSha = ref.object.sha;
+    const commit = await (await gh(`/git/commits/${headSha}`)).json();
+
+    const tree = await (await gh(`/git/trees/${headSha}?recursive=1`)).json();
+    const targets = tree.tree.filter((t) =>
+        t.type === 'blob' && (
+            /^[^/]+\.html$/.test(t.path) ||
+            /^services\/[^/]+\.html$/.test(t.path) ||
+            t.path === 'sitemap.xml' || t.path === 'robots.txt'
+        ));
+
+    const newTreeItems = [];
+    for (const t of targets) {
+        const file = await (await gh(`/contents/${t.path}`)).json();
+        const text = Buffer.from(file.content, 'base64').toString();
+        if (!text.includes(oldUrl)) continue;
+        newTreeItems.push({
+            path: t.path, mode: '100644', type: 'blob',
+            content: text.split(oldUrl).join(newUrl),
+        });
+    }
+    newTreeItems.push({
+        path: 'settings.json', mode: '100644', type: 'blob',
+        content: JSON.stringify(newSettings, null, 2) + '\n',
+    });
+
+    const newTree = await (await gh('/git/trees', {
+        method: 'POST',
+        body: JSON.stringify({ base_tree: commit.tree.sha, tree: newTreeItems }),
+    })).json();
+    if (!newTree.sha) throw new Error('tree creation failed');
+
+    const newCommit = await (await gh('/git/commits', {
+        method: 'POST',
+        body: JSON.stringify({
+            message: `Admin: change site address ${oldUrl} -> ${newUrl}`,
+            tree: newTree.sha,
+            parents: [headSha],
+            committer: { name: 'DGS Admin', email: 'admin@users.noreply.github.com' },
+        }),
+    })).json();
+    if (!newCommit.sha) throw new Error('commit creation failed');
+
+    const upd = await gh('/git/refs/heads/master', {
+        method: 'PATCH',
+        body: JSON.stringify({ sha: newCommit.sha }),
+    });
+    if (!upd.ok) throw new Error('ref update failed');
 }

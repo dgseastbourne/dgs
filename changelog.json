@@ -1,0 +1,32 @@
+{
+  "changelog": [
+    {
+      "date": "2026-07-11",
+      "items": [
+        "Launched the new premium dark website (replacing the Coming Soon page)",
+        "Recreated the logo as a crisp vector graphic (SVG)",
+        "Built 8 dedicated service pages with details of what's included",
+        "Marked MOT Testing as Coming Soon across the whole site, with a notify-me signup",
+        "Connected the newsletter signup to Brevo (subscriber list)",
+        "Connected the contact form to email delivery via Resend, with anti-spam protection",
+        "Built the admin dashboard with passwordless email sign-in",
+        "Added subscriber statistics and list to the dashboard",
+        "Made the WhatsApp number editable from the dashboard",
+        "Split the mobile bottom bar into Call Us + WhatsApp Us",
+        "Added the floating WhatsApp button with pulse animation on desktop",
+        "Added mobile hamburger menu and always-visible call bar",
+        "Added Google Analytics, Search Console and Bing integration fields with step-by-step guides",
+        "Styled the Google map to match the dark theme",
+        "SEO package: clean URLs, Open Graph previews, schema.org business data, sitemap and robots.txt",
+        "Set up automatic publishing: every change goes live within a minute"
+      ]
+    }
+  ],
+  "roadmap": [
+    { "title": "Custom domain + branded business email", "status": "planned" },
+    { "title": "Verify domain in Resend & Brevo for reliable email delivery", "status": "planned" },
+    { "title": "MOT bay launch announcement + newsletter campaign", "status": "planned" },
+    { "title": "Customer reviews section on the website", "status": "planned" },
+    { "title": "Online booking system", "status": "planned" }
+  ]
+}

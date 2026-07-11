@@ -49,3 +49,31 @@ fetch(prefix + 'settings.json')
         addMeta('msvalidate.01', s.bingToken);
     })
     .catch(() => {});
+
+// Animated stat counters
+const counters = document.querySelectorAll('.stat .num[data-count]');
+if (counters.length && 'IntersectionObserver' in window &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+            if (!en.isIntersecting) return;
+            const el = en.target;
+            io.unobserve(el);
+            const target = +el.dataset.count;
+            const suffix = el.dataset.suffix || '';
+            const t0 = performance.now();
+            const dur = 1500;
+            const step = (t) => {
+                const p = Math.min((t - t0) / dur, 1);
+                const eased = 1 - Math.pow(1 - p, 3); // ease-out
+                el.textContent = Math.round(target * eased) + suffix;
+                if (p < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        });
+    }, { threshold: 0.5 });
+    counters.forEach((el) => {
+        el.textContent = '0' + (el.dataset.suffix || '');
+        io.observe(el);
+    });
+}
