@@ -222,11 +222,46 @@ footer .brand { font-size: 1rem; display: block; margin-bottom: 8px; }
     box-shadow: 0 8px 24px rgba(108, 190, 69, 0.35);
 }
 
+/* ---------- Mobile menu + bottom call bar ---------- */
+.menu-btn {
+    display: none; background: none; border: 1.5px solid var(--line);
+    border-radius: 8px; padding: 6px 12px; color: var(--text);
+    font-size: 1.25rem; line-height: 1; cursor: pointer;
+}
+.menu-btn:hover { border-color: var(--green); }
+.call-bar { display: none; }
+
 @media (max-width: 820px) {
-    .nav-links a:not(.btn) { display: none; }
     .about-grid, .contact-grid { grid-template-columns: 1fr; }
     section { padding: 60px 0; }
-    .call-fab { display: block; }
+    .call-fab { display: none !important; }
+    body { padding-bottom: 74px; }
+
+    /* Hamburger replaces the call button in the header */
+    .menu-btn { display: block; }
+    .nav-links a.btn { display: none; }
+    .nav-links {
+        display: none; position: absolute; top: 100%; left: 0; right: 0;
+        flex-direction: column; gap: 0; padding: 6px 0;
+        background: rgba(12, 14, 12, 0.98); backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--line);
+    }
+    .nav-links.open { display: flex; }
+    .nav-links a { display: block; width: 100%; padding: 14px 24px; font-size: 1.05rem; }
+    nav { position: sticky; }
+    .nav-inner { position: relative; }
+
+    /* Fixed bottom call bar */
+    .call-bar {
+        display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+        background: rgba(12, 14, 12, 0.95); backdrop-filter: blur(10px);
+        border-top: 1px solid var(--line);
+        padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    }
+    .call-bar .btn {
+        display: block; width: 100%; text-align: center;
+        padding: 14px; font-size: 1.05rem; color: #0c0e0c;
+    }
 }
 
 /* ---------- Coming soon badge ---------- */

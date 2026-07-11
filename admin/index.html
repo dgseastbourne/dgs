@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Darrens Garage Services</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/style.css">
+    <style>
+        .admin-wrap { max-width: 760px; margin: 0 auto; padding: 60px 24px; }
+        .admin-card {
+            background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+            padding: 36px;
+        }
+        .admin-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .admin-head h1 { font-size: 1.6rem; }
+        .stat-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+        .stat-row .stat { flex: 1; min-width: 140px; }
+        table.subs { width: 100%; border-collapse: collapse; }
+        table.subs th, table.subs td {
+            text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line);
+            font-size: 0.93rem;
+        }
+        table.subs th { color: var(--green); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
+        table.subs td { color: var(--muted); }
+        table.subs td:first-child { color: var(--text); }
+        .hidden { display: none; }
+        .logout { background: transparent; border: 1.5px solid var(--line); color: var(--muted); padding: 8px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; }
+        .logout:hover { border-color: #c0705a; color: #c0705a; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-inner">
+            <a class="brand" href="../index.html"><span>D</span>arrens <span>G</span>arage <span>S</span>ervices</a>
+            <div class="nav-links">
+                <span class="badge badge-soon">Admin</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="admin-wrap">
+
+        <!-- Login view -->
+        <div class="admin-card" id="loginView">
+            <h1 style="margin-bottom: 8px;">Dashboard sign-in</h1>
+            <p style="color: var(--muted); margin-bottom: 24px;">Enter the admin email address and we'll send you a sign-in link.</p>
+            <form id="loginForm">
+                <div class="field">
+                    <label for="adm-email">Admin email</label>
+                    <input id="adm-email" name="email" type="email" required autocomplete="email">
+                </div>
+                <button class="btn" type="submit" style="border: none; cursor: pointer; font-family: inherit; font-size: 1rem; width: 100%;">Send sign-in link</button>
+                <div class="form-status" id="loginStatus"></div>
+            </form>
+        </div>
+
+        <!-- Dashboard view -->
+        <div class="admin-card hidden" id="dashView">
+            <div class="admin-head">
+                <h1>Newsletter subscribers</h1>
+                <button class="logout" id="logoutBtn">Sign out</button>
+            </div>
+            <div class="stat-row">
+                <div class="stat"><div class="num" id="statTotal">–</div><div class="lbl">Total subscribers</div></div>
+                <div class="stat"><div class="num" id="statWeek">–</div><div class="lbl">Added last 7 days</div></div>
+            </div>
+            <table class="subs">
+                <thead><tr><th>Email</th><th>Subscribed</th><th>Status</th></tr></thead>
+                <tbody id="subsBody"><tr><td colspan="3">Loading…</td></tr></tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        const loginView = document.getElementById('loginView');
+        const dashView = document.getElementById('dashView');
+
+        function setStatus(el, msg, ok) {
+            el.textContent = msg;
+            el.className = 'form-status ' + (ok ? 'ok' : 'err');
+        }
+
+        async function loadDashboard() {
+            const r = await fetch('/api/admin/subscribers');
+            if (r.status === 401) return false;
+            const data = await r.json();
+            if (!r.ok) throw new Error(data.error || 'Failed to load');
+
+            loginView.classList.add('hidden');
+            dashView.classList.remove('hidden');
+
+            document.getElementById('statTotal').textContent = data.total;
+            const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+            document.getElementById('statWeek').textContent =
+                data.subscribers.filter(s => s.addedAt && new Date(s.addedAt).getTime() > weekAgo).length;
+
+            const rows = data.subscribers.map(s => `
+                <tr>
+                    <td>${s.email}</td>
+                    <td>${s.addedAt ? new Date(s.addedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
+                    <td>${s.blacklisted ? 'Unsubscribed' : 'Active'}</td>
+                </tr>`).join('');
+            document.getElementById('subsBody').innerHTML =
+                rows || '<tr><td colspan="3">No subscribers yet.</td></tr>';
+            return true;
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const status = document.getElementById('loginStatus');
+            const btn = e.target.querySelector('button');
+            btn.disabled = true; btn.textContent = 'Sending…';
+            try {
+                const r = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: e.target.email.value.trim() }),
+                });
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.error || 'Something went wrong.');
+                setStatus(status, data.message, true);
+            } catch (err) {
+                setStatus(status, err.message, false);
+            } finally {
+                btn.disabled = false; btn.textContent = 'Send sign-in link';
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await fetch('/api/admin/subscribers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'logout' }),
+            });
+            dashView.classList.add('hidden');
+            loginView.classList.remove('hidden');
+        });
+
+        // Try existing session on load
+        loadDashboard().catch(() => {});
+    </script>
+
+</body>
+</html>
