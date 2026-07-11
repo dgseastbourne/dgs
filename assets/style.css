@@ -358,5 +358,5 @@ a.card { display: block; color: inherit; text-decoration: none; }
 /* Dark Google Maps embed */
 .map-frame { background: #17181a; }
 .map-frame iframe {
-    filter: invert(92%) hue-rotate(180deg) contrast(88%) saturate(60%) brightness(95%);
+    filter: invert(88%) hue-rotate(180deg) saturate(170%) brightness(108%) contrast(94%);
 }

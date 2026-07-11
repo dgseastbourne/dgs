@@ -30,13 +30,41 @@
         .hidden { display: none; }
         .logout { background: transparent; border: 1.5px solid var(--line); color: var(--muted); padding: 8px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; }
         .logout:hover { border-color: #c0705a; color: #c0705a; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 6px; margin-bottom: 28px; border-bottom: 1px solid var(--line); }
+        .tab {
+            background: none; border: none; border-bottom: 2px solid transparent;
+            color: var(--muted); font-family: inherit; font-size: 0.98rem; font-weight: 600;
+            padding: 10px 18px; cursor: pointer;
+        }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+        /* Help popovers */
+        .help-row { display: flex; align-items: center; gap: 8px; }
+        .help-btn {
+            width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+            background: rgba(108, 190, 69, 0.15); color: var(--green);
+            border: 1px solid var(--green); font-size: 0.75rem; font-weight: 700;
+            cursor: pointer; line-height: 1;
+        }
+        .help-box {
+            display: none; background: var(--bg-2); border: 1px solid var(--line);
+            border-left: 3px solid var(--green); border-radius: 8px;
+            padding: 14px 16px; margin: 8px 0 4px; font-size: 0.88rem; color: var(--muted);
+        }
+        .help-box.open { display: block; }
+        .help-box ol { margin: 6px 0 0 18px; }
+        .help-box li { margin-bottom: 6px; }
+        .help-box a { color: var(--green); }
     </style>
 </head>
 <body>
 
     <nav>
         <div class="nav-inner">
-            <a class="brand" href="../index.html"><span>D</span>arrens <span>G</span>arage <span>S</span>ervices</a>
+            <a class="brand" href="/"><span>D</span>arrens <span>G</span>arage <span>S</span>ervices</a>
             <div class="nav-links">
                 <span class="badge badge-soon">Admin</span>
             </div>
@@ -62,42 +90,90 @@
         <!-- Dashboard view -->
         <div class="admin-card hidden" id="dashView">
             <div class="admin-head">
-                <h1>Newsletter subscribers</h1>
+                <h1 id="dashTitle">Dashboard</h1>
                 <button class="logout" id="logoutBtn">Sign out</button>
             </div>
-            <div class="stat-row">
-                <div class="stat"><div class="num" id="statTotal">–</div><div class="lbl">Total subscribers</div></div>
-                <div class="stat"><div class="num" id="statWeek">–</div><div class="lbl">Added last 7 days</div></div>
+
+            <div class="tabs">
+                <button class="tab active" data-tab="subs">Subscribers</button>
+                <button class="tab" data-tab="settings">Site settings</button>
             </div>
-            <table class="subs">
-                <thead><tr><th>Email</th><th>Subscribed</th><th>Status</th></tr></thead>
-                <tbody id="subsBody"><tr><td colspan="3">Loading…</td></tr></tbody>
-            </table>
 
-            <hr style="border: none; border-top: 1px solid var(--line); margin: 32px 0;">
+            <div id="tab-subs">
+                <div class="stat-row">
+                    <div class="stat"><div class="num" id="statTotal">–</div><div class="lbl">Total subscribers</div></div>
+                    <div class="stat"><div class="num" id="statWeek">–</div><div class="lbl">Added last 7 days</div></div>
+                </div>
+                <table class="subs">
+                    <thead><tr><th>Email</th><th>Subscribed</th><th>Status</th></tr></thead>
+                    <tbody id="subsBody"><tr><td colspan="3">Loading…</td></tr></tbody>
+                </table>
+            </div>
 
-            <h2 style="font-size: 1.2rem; margin-bottom: 6px;">Site settings</h2>
-            <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 18px;">Changes go live automatically in about a minute.</p>
-            <form id="settingsForm">
-                <div class="field">
-                    <label for="set-wa">WhatsApp number (international format, no +)</label>
-                    <input id="set-wa" name="whatsapp" type="text" placeholder="e.g. 447815981647" required pattern="[0-9 +\-()]{8,20}">
-                </div>
-                <div class="field">
-                    <label for="set-ga">Google Analytics 4 — Measurement ID (optional)</label>
-                    <input id="set-ga" name="ga4Id" type="text" placeholder="G-XXXXXXXXXX">
-                </div>
-                <div class="field">
-                    <label for="set-gsc">Google Search Console — meta verification token (optional)</label>
-                    <input id="set-gsc" name="gscToken" type="text" placeholder='content value from &lt;meta name="google-site-verification"&gt;'>
-                </div>
-                <div class="field">
-                    <label for="set-bing">Bing Webmaster — meta verification token (optional)</label>
-                    <input id="set-bing" name="bingToken" type="text" placeholder='content value from &lt;meta name="msvalidate.01"&gt;'>
-                </div>
-                <button class="btn" type="submit" style="border: none; cursor: pointer; font-family: inherit; font-size: 1rem;">Save settings</button>
-                <div class="form-status" id="settingsStatus"></div>
-            </form>
+            <div id="tab-settings" class="hidden">
+                <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 18px;">Changes go live automatically in about a minute.</p>
+                <form id="settingsForm">
+                    <div class="field">
+                        <label for="set-wa">WhatsApp number (international format, no +)</label>
+                        <input id="set-wa" name="whatsapp" type="text" placeholder="e.g. 447815981647" required pattern="[0-9 +\-()]{8,20}">
+                    </div>
+
+                    <div class="field">
+                        <div class="help-row">
+                            <label for="set-ga" style="margin-bottom: 0;">Google Analytics 4 — Measurement ID (optional)</label>
+                            <button type="button" class="help-btn" data-help="help-ga" aria-label="How do I get this?">?</button>
+                        </div>
+                        <div class="help-box" id="help-ga">
+                            <strong style="color: var(--text);">How to get your GA4 Measurement ID:</strong>
+                            <ol>
+                                <li>Go to <a href="https://analytics.google.com" target="_blank" rel="noopener">analytics.google.com</a> and sign in with the business Google account</li>
+                                <li>Admin (gear, bottom-left) &rarr; <em>Create Property</em> &rarr; name it "Darrens Garage Services", country UK, currency GBP</li>
+                                <li>Choose <em>Web</em> as the platform and enter the site address</li>
+                                <li>Open the created <em>Data Stream</em> and copy the <strong>Measurement ID</strong> — it looks like <code>G-ABC12DE3FG</code></li>
+                                <li>Paste it below and save — tracking starts within a few minutes</li>
+                            </ol>
+                        </div>
+                        <input id="set-ga" name="ga4Id" type="text" placeholder="G-XXXXXXXXXX" style="margin-top: 8px;">
+                    </div>
+
+                    <div class="field">
+                        <div class="help-row">
+                            <label for="set-gsc" style="margin-bottom: 0;">Google Search Console — meta verification token (optional)</label>
+                            <button type="button" class="help-btn" data-help="help-gsc" aria-label="How do I get this?">?</button>
+                        </div>
+                        <div class="help-box" id="help-gsc">
+                            <strong style="color: var(--text);">How to verify with Google Search Console:</strong>
+                            <ol>
+                                <li>Go to <a href="https://search.google.com/search-console" target="_blank" rel="noopener">search.google.com/search-console</a> &rarr; <em>Add property</em> &rarr; choose <em>URL prefix</em> and enter the site address</li>
+                                <li><strong>Easiest:</strong> if Google Analytics is already set up above, pick the <em>Google Analytics</em> verification method — done, no token needed</li>
+                                <li>Otherwise pick <em>HTML tag</em>: you'll see <code>&lt;meta name="google-site-verification" content="ABC123..."&gt;</code></li>
+                                <li>Copy only the <strong>content</strong> value (the ABC123... part) and paste it below, save, wait a minute, then click <em>Verify</em> in Search Console</li>
+                            </ol>
+                        </div>
+                        <input id="set-gsc" name="gscToken" type="text" placeholder='content value from &lt;meta name="google-site-verification"&gt;' style="margin-top: 8px;">
+                    </div>
+
+                    <div class="field">
+                        <div class="help-row">
+                            <label for="set-bing" style="margin-bottom: 0;">Bing Webmaster — meta verification token (optional)</label>
+                            <button type="button" class="help-btn" data-help="help-bing" aria-label="How do I get this?">?</button>
+                        </div>
+                        <div class="help-box" id="help-bing">
+                            <strong style="color: var(--text);">How to verify with Bing Webmaster Tools:</strong>
+                            <ol>
+                                <li>Go to <a href="https://www.bing.com/webmasters" target="_blank" rel="noopener">bing.com/webmasters</a> and sign in</li>
+                                <li><strong>Easiest:</strong> choose <em>Import from Google Search Console</em> — Bing copies the verified site automatically, no token needed</li>
+                                <li>Otherwise: <em>Add site manually</em> &rarr; verification method <em>HTML Meta Tag</em>: you'll see <code>&lt;meta name="msvalidate.01" content="ABC123..."&gt;</code></li>
+                                <li>Copy only the <strong>content</strong> value, paste it below, save, wait a minute, then click <em>Verify</em> in Bing</li>
+                            </ol>
+                        </div>
+                        <input id="set-bing" name="bingToken" type="text" placeholder='content value from &lt;meta name="msvalidate.01"&gt;' style="margin-top: 8px;">
+                    </div>
+
+                    <button class="btn" type="submit" style="border: none; cursor: pointer; font-family: inherit; font-size: 1rem;">Save settings</button>
+                    <div class="form-status" id="settingsStatus"></div>
+                </form>
+            </div>
         </div>
 
     </div>
@@ -170,6 +246,19 @@
                 btn.disabled = false; btn.textContent = 'Send sign-in link';
             }
         });
+
+        // Tabs
+        document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
+            t.classList.add('active');
+            document.getElementById('tab-subs').classList.toggle('hidden', t.dataset.tab !== 'subs');
+            document.getElementById('tab-settings').classList.toggle('hidden', t.dataset.tab !== 'settings');
+        }));
+
+        // Help popovers
+        document.querySelectorAll('.help-btn').forEach((b) => b.addEventListener('click', () => {
+            document.getElementById(b.dataset.help).classList.toggle('open');
+        }));
 
         document.getElementById('settingsForm').addEventListener('submit', async (e) => {
             e.preventDefault();
