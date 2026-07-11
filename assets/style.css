@@ -324,3 +324,39 @@ a.card { display: block; color: inherit; text-decoration: none; }
 /* Fix: nav call button text (was overridden by .nav-links a colour) */
 .nav-links a.btn { color: #0c0e0c; font-weight: 600; }
 .nav-links a.btn:hover { color: #0c0e0c; background: var(--green-dark); }
+
+/* ---------- WhatsApp ---------- */
+.btn-wa { background: #25D366; color: #0c0e0c; }
+.btn-wa:hover { background: #1fb457; }
+.call-bar-inner { display: flex; gap: 10px; max-width: 520px; margin: 0 auto; }
+.call-bar .btn { flex: 1; text-align: center; padding: 14px 8px; font-size: 1rem; }
+
+.wa-float {
+    position: fixed; right: 22px; bottom: 22px; z-index: 300;
+    width: 58px; height: 58px; border-radius: 50%;
+    background: #25D366; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+    transition: transform 0.2s, background 0.2s;
+}
+.wa-float:hover { transform: translateY(-3px) scale(1.05); background: #1fb457; }
+.wa-float svg { width: 32px; height: 32px; fill: #ffffff; }
+
+@media (max-width: 820px) {
+    .wa-float { display: none; }
+}
+
+/* WhatsApp pulse */
+@keyframes wa-pulse {
+    0%   { box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4), 0 0 0 0 rgba(37, 211, 102, 0.55); }
+    70%  { box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4), 0 0 0 18px rgba(37, 211, 102, 0); }
+    100% { box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4), 0 0 0 0 rgba(37, 211, 102, 0); }
+}
+.wa-float { animation: wa-pulse 2.2s ease-out infinite; }
+.wa-float:hover { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .wa-float { animation: none; } }
+
+/* Dark Google Maps embed */
+.map-frame { background: #17181a; }
+.map-frame iframe {
+    filter: invert(92%) hue-rotate(180deg) contrast(88%) saturate(60%) brightness(95%);
+}

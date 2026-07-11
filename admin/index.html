@@ -73,6 +73,31 @@
                 <thead><tr><th>Email</th><th>Subscribed</th><th>Status</th></tr></thead>
                 <tbody id="subsBody"><tr><td colspan="3">Loading…</td></tr></tbody>
             </table>
+
+            <hr style="border: none; border-top: 1px solid var(--line); margin: 32px 0;">
+
+            <h2 style="font-size: 1.2rem; margin-bottom: 6px;">Site settings</h2>
+            <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 18px;">Changes go live automatically in about a minute.</p>
+            <form id="settingsForm">
+                <div class="field">
+                    <label for="set-wa">WhatsApp number (international format, no +)</label>
+                    <input id="set-wa" name="whatsapp" type="text" placeholder="e.g. 447815981647" required pattern="[0-9 +\-()]{8,20}">
+                </div>
+                <div class="field">
+                    <label for="set-ga">Google Analytics 4 — Measurement ID (optional)</label>
+                    <input id="set-ga" name="ga4Id" type="text" placeholder="G-XXXXXXXXXX">
+                </div>
+                <div class="field">
+                    <label for="set-gsc">Google Search Console — meta verification token (optional)</label>
+                    <input id="set-gsc" name="gscToken" type="text" placeholder='content value from &lt;meta name="google-site-verification"&gt;'>
+                </div>
+                <div class="field">
+                    <label for="set-bing">Bing Webmaster — meta verification token (optional)</label>
+                    <input id="set-bing" name="bingToken" type="text" placeholder='content value from &lt;meta name="msvalidate.01"&gt;'>
+                </div>
+                <button class="btn" type="submit" style="border: none; cursor: pointer; font-family: inherit; font-size: 1rem;">Save settings</button>
+                <div class="form-status" id="settingsStatus"></div>
+            </form>
         </div>
 
     </div>
@@ -108,6 +133,20 @@
                 </tr>`).join('');
             document.getElementById('subsBody').innerHTML =
                 rows || '<tr><td colspan="3">No subscribers yet.</td></tr>';
+
+            // load current settings
+            try {
+                const sr = await fetch('/api/admin/settings');
+                if (sr.ok) {
+                    const { settings } = await sr.json();
+                    if (settings) {
+                        document.getElementById('set-wa').value = settings.whatsapp || '';
+                        document.getElementById('set-ga').value = settings.ga4Id || '';
+                        document.getElementById('set-gsc').value = settings.gscToken || '';
+                        document.getElementById('set-bing').value = settings.bingToken || '';
+                    }
+                }
+            } catch {}
             return true;
         }
 
@@ -129,6 +168,32 @@
                 setStatus(status, err.message, false);
             } finally {
                 btn.disabled = false; btn.textContent = 'Send sign-in link';
+            }
+        });
+
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const status = document.getElementById('settingsStatus');
+            const btn = e.target.querySelector('button');
+            btn.disabled = true; btn.textContent = 'Saving…';
+            try {
+                const r = await fetch('/api/admin/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        whatsapp: e.target.whatsapp.value.trim(),
+                        ga4Id: e.target.ga4Id.value.trim(),
+                        gscToken: e.target.gscToken.value.trim(),
+                        bingToken: e.target.bingToken.value.trim(),
+                    }),
+                });
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.error || 'Could not save.');
+                setStatus(status, data.message, true);
+            } catch (err) {
+                setStatus(status, err.message, false);
+            } finally {
+                btn.disabled = false; btn.textContent = 'Save settings';
             }
         });
 
