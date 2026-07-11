@@ -56,3 +56,6 @@ out/
 *.log
 .cache/
 .parcel-cache/
+
+# any .env-style copies
+*.env
