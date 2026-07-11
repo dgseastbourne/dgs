@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
     <style>
         .admin-wrap { max-width: 760px; margin: 0 auto; padding: 60px 24px; }
         .admin-card {
@@ -430,8 +431,15 @@
                     <div style="display:flex; gap:10px;">
                         <input id="utm-result" readonly style="flex:1; padding:10px 14px; border-radius:8px; background: var(--bg-2); border:1.5px solid var(--line); color: var(--green); font-family: monospace; font-size:0.85rem;">
                         <button class="btn" id="utm-copy" style="border:none; cursor:pointer; font-family:inherit;">Copy</button>
+                        <button class="btn btn-outline" id="qr-make" style="cursor:pointer; font-family:inherit;">QR code</button>
                     </div>
                     <div class="form-status" id="utmStatus"></div>
+                    <div id="qr-box" class="hidden" style="margin-top:16px; text-align:center; background:#ffffff; border-radius:12px; padding:22px; max-width:300px;">
+                        <img id="qr-img" alt="QR code" style="width:220px; height:220px; image-rendering:pixelated;">
+                        <div style="margin-top:10px;">
+                            <a class="btn" id="qr-download" download="qr-code.png" style="font-size:0.9rem;">Download PNG (print quality)</a>
+                        </div>
+                    </div>
 
                     <h2 style="font-size:1.05rem; margin: 30px 0 10px;">History by year</h2>
                     <div id="yearBtns" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
@@ -463,6 +471,51 @@
                     } catch {
                         document.getElementById('utm-result').select();
                         setStatus(document.getElementById('utmStatus'), 'Press Cmd/Ctrl+C to copy.', true);
+                    }
+                });
+
+                // QR code from the campaign link
+                document.getElementById('qr-make').addEventListener('click', () => {
+                    const status = document.getElementById('utmStatus');
+                    if (typeof qrcode !== 'function') {
+                        setStatus(status, 'QR library could not load — check your connection and refresh.', false);
+                        return;
+                    }
+                    try {
+                        const url = document.getElementById('utm-result').value;
+                        const qr = qrcode(0, 'M');
+                        qr.addData(url);
+                        qr.make();
+
+                        // crisp print-quality PNG via canvas (~1200px + quiet zone)
+                        const n = qr.getModuleCount();
+                        const scale = Math.ceil(1200 / n);
+                        const quiet = 4 * scale;
+                        const size = n * scale + quiet * 2;
+                        const canvas = document.createElement('canvas');
+                        canvas.width = canvas.height = size;
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, size, size);
+                        ctx.fillStyle = '#000000';
+                        for (let r = 0; r < n; r++) {
+                            for (let c = 0; c < n; c++) {
+                                if (qr.isDark(r, c)) {
+                                    ctx.fillRect(quiet + c * scale, quiet + r * scale, scale, scale);
+                                }
+                            }
+                        }
+                        const png = canvas.toDataURL('image/png');
+                        document.getElementById('qr-img').src = png;
+                        const dl = document.getElementById('qr-download');
+                        dl.href = png;
+                        const src = document.getElementById('utm-source').value.trim() || 'link';
+                        const cmp = document.getElementById('utm-campaign').value.trim();
+                        dl.download = `qr-${src}${cmp ? '-' + cmp : ''}.png`;
+                        document.getElementById('qr-box').classList.remove('hidden');
+                        setStatus(status, 'QR generated — scan it to test, download for print.', true);
+                    } catch (err) {
+                        setStatus(status, 'Could not generate the QR code: ' + err.message, false);
                     }
                 });
 
