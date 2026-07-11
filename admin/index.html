@@ -11,7 +11,19 @@
     <link rel="stylesheet" href="../assets/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
     <style>
-        .admin-wrap { max-width: 760px; margin: 0 auto; padding: 60px 24px; }
+        .admin-wrap { max-width: 1240px; margin: 0 auto; padding: 48px 32px; }
+        #loginView { max-width: 560px; margin: 0 auto; }
+
+        /* two-step delete confirmation */
+        .t-del.armed { color: #ffffff; background: #c0392b; border-radius: 6px; font-size: 0.75rem; padding: 6px 10px; }
+
+        /* per-campaign stats panel */
+        .camp-stats {
+            background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px;
+            padding: 18px; margin: 4px 0 14px;
+        }
+        .camp-stats h4 { color: var(--green); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; margin: 14px 0 8px; }
+        .camp-stats h4:first-child { margin-top: 0; }
         .admin-card {
             background: var(--card); border: 1px solid var(--line); border-radius: 14px;
             padding: 36px;
@@ -621,8 +633,10 @@
                                 </div>
                                 <button class="btn" data-copy="${l.url}" style="border:none; cursor:pointer; font-family:inherit; font-size:0.8rem; padding:6px 12px;">Copy</button>
                                 <button class="btn btn-outline" data-qrurl="${l.url}" data-qrname="${qrName(l.source, l.campaign)}" style="cursor:pointer; font-family:inherit; font-size:0.8rem; padding:6px 12px;">QR</button>
+                                <button class="btn btn-outline" data-stats="${l.campaign ? l.source + ' / ' + l.campaign : (l.source || '')}" data-panel="cs-${l.id}" style="cursor:pointer; font-family:inherit; font-size:0.8rem; padding:6px 12px;">Stats</button>
                                 <button class="t-del" data-del="${l.id}" title="Remove">&#10005;</button>
-                            </div>`).join('') || '<p style="color: var(--muted); font-size: 0.9rem;">No saved links yet — build one above and press Save.</p>';
+                            </div>
+                            <div class="camp-stats hidden" id="cs-${l.id}"></div>`).join('') || '<p style="color: var(--muted); font-size: 0.9rem;">No saved links yet — build one above and press Save.</p>';
 
                         box.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', async () => {
                             try { await navigator.clipboard.writeText(b.dataset.copy);
@@ -630,13 +644,64 @@
                         }));
                         box.querySelectorAll('[data-qrurl]').forEach((b) => b.addEventListener('click', () =>
                             renderQr(b.dataset.qrurl, b.dataset.qrname)));
+                        // two-step delete: first click arms the button, second confirms
                         box.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', async () => {
+                            if (!b.classList.contains('armed')) {
+                                b.classList.add('armed');
+                                b.textContent = 'Delete?';
+                                b.title = 'Click again to confirm';
+                                setTimeout(() => {
+                                    b.classList.remove('armed');
+                                    b.innerHTML = '&#10005;';
+                                    b.title = 'Remove';
+                                }, 4000);
+                                return;
+                            }
                             await fetch('/api/admin/links', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ action: 'delete', id: b.dataset.del }),
                             });
                             loadSavedLinks();
+                        }));
+
+                        // per-campaign statistics panel (daily / monthly / yearly)
+                        box.querySelectorAll('[data-stats]').forEach((b) => b.addEventListener('click', async () => {
+                            const panel = document.getElementById(b.dataset.panel);
+                            if (!panel.classList.contains('hidden')) {
+                                panel.classList.add('hidden');
+                                return;
+                            }
+                            panel.classList.remove('hidden');
+                            panel.innerHTML = '<p style="color:var(--muted); font-size:0.85rem;">Loading…</p>';
+                            try {
+                                const label = b.dataset.stats;
+                                if (!label) throw new Error('This link has no source set.');
+                                const cs = await fetch('/api/admin/stats?campaign=' + encodeURIComponent(label)).then((r) => r.json());
+                                if (cs.error) throw new Error(cs.error);
+
+                                const mNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                                const chart = (items, h, lbl) => {
+                                    const mx = Math.max(...items.map((x) => x.views), 1);
+                                    return `<div style="display:flex; gap:3px; height:${h}px; align-items:stretch;">` +
+                                        items.map((x) => `
+                                            <div title="${x.date || x.month || x.year}: ${x.views} visits" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; text-align:center;">
+                                                <div style="background:var(--green); border-radius:2px 2px 0 0; min-height:1px; height:${Math.round((x.views / mx) * 88)}%;"></div>
+                                                ${lbl ? `<div style="font-size:0.6rem; color:var(--muted); margin-top:3px;">${lbl(x)}</div>` : ''}
+                                            </div>`).join('') + '</div>';
+                                };
+                                const d30 = cs.daily.reduce((s, x) => s + x.views, 0);
+                                const m12 = cs.monthly.reduce((s, x) => s + x.views, 0);
+                                panel.innerHTML = `
+                                    <h4>Daily — last 30 days (${d30} visits)</h4>
+                                    ${chart(cs.daily, 60)}
+                                    <h4>Monthly — last 12 months (${m12} visits)</h4>
+                                    ${chart(cs.monthly, 70, (x) => mNames[parseInt(x.month.slice(5), 10) - 1])}
+                                    <h4>Yearly</h4>
+                                    ${cs.yearly.map((y) => `<div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--muted); padding:4px 0; border-bottom:1px solid var(--line);"><span>${y.year}</span><span style="color:var(--text);">${y.views}</span></div>`).join('') || '<p style="color:var(--muted); font-size:0.85rem;">No yearly data yet.</p>'}`;
+                            } catch (err) {
+                                panel.innerHTML = `<p style="color:#c0705a; font-size:0.85rem;">${err.message}</p>`;
+                            }
                         }));
                     } catch {
                         box.innerHTML = '<p style="color:#c0705a; font-size:0.9rem;">Could not load saved links.</p>';

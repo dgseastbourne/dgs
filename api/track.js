@@ -42,7 +42,12 @@ export default async function handler(req, res) {
         const campaign = clean(uc);
         if (source) {
             const label = campaign ? `${source} / ${campaign}` : source;
-            cmds.push(['HINCRBY', `cm:${month}`, label, 1], ['EXPIRE', `cm:${month}`, YEAR]);
+            const yr = month.slice(0, 4);
+            cmds.push(
+                ['HINCRBY', `cm:${month}`, label, 1], ['EXPIRE', `cm:${month}`, YEAR],
+                ['HINCRBY', `cd:${day}`, label, 1], ['EXPIRE', `cd:${day}`, YEAR],
+                ['HINCRBY', `cy:${yr}`, label, 1], ['EXPIRE', `cy:${yr}`, FIVE_YEARS],
+            );
         }
         await redisPipeline(cmds);
         return res.status(200).json({ ok: true });

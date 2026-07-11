@@ -10,6 +10,38 @@ export default async function handler(req, res) {
     }
 
     try {
+        // Per-campaign stats: ?campaign=<label> -> daily (30d) / monthly (12m) / yearly
+        const campaign = String(req.query.campaign || '');
+        if (campaign) {
+            if (!/^[a-z0-9][a-z0-9 _.\-/]{0,89}$/.test(campaign)) {
+                return res.status(400).json({ error: 'Invalid campaign label.' });
+            }
+            const days = [];
+            for (let i = 29; i >= 0; i--) {
+                days.push(new Date(Date.now() - i * 24 * 3600 * 1000).toISOString().slice(0, 10));
+            }
+            const now = new Date();
+            const months = [];
+            for (let i = 11; i >= 0; i--) {
+                months.push(new Date(now.getFullYear(), now.getMonth() - i, 15).toISOString().slice(0, 7));
+            }
+            const [yearsList] = await redisPipeline([['SMEMBERS', 'stat-years']]);
+            const years = (yearsList || []).sort();
+
+            const values = await redisPipeline([
+                ...days.map((d) => ['HGET', `cd:${d}`, campaign]),
+                ...months.map((m) => ['HGET', `cm:${m}`, campaign]),
+                ...years.map((y) => ['HGET', `cy:${y}`, campaign]),
+            ]);
+            const num = (v) => parseInt(v, 10) || 0;
+            return res.status(200).json({
+                campaign,
+                daily: days.map((d, i) => ({ date: d, views: num(values[i]) })),
+                monthly: months.map((m, i) => ({ month: m, views: num(values[days.length + i]) })),
+                yearly: years.map((y, i) => ({ year: y, views: num(values[days.length + months.length + i]) })),
+            });
+        }
+
         // Yearly "sub-page": ?year=2026 -> monthly totals for that year only
         const year = String(req.query.year || '');
         if (/^\d{4}$/.test(year)) {
