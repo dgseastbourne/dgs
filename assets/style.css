@@ -64,7 +64,7 @@ header.hero {
         var(--bg);
     text-align: center;
 }
-.hero-logo { max-width: 420px; width: 85%; display: block; }
+.hero-logo { max-width: 420px; width: 85%; height: auto; display: block; }
 .hero-logo-card {
     display: inline-block; background: #ffffff; border-radius: 14px;
     padding: 18px 28px 8px; margin-bottom: 36px;
