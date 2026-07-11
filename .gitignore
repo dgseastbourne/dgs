@@ -1,0 +1,58 @@
+# Development
+start-server.command
+*.command
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+
+# Build & Dist
+dist/
+build/
+.next/
+.nuxt/
+out/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Screenshots & Media (development only)
+**/screenshots/
+**/temp/
+*.jpeg
+*.jpg
+*.png
+!src/**/*.png
+!images/**/*.png
+!public/**/*.png
+
+# Vercel
+.vercel/
+
+# Other
+*.log
+.cache/
+.parcel-cache/

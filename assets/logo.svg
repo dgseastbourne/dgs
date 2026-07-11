@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 250" role="img" aria-label="Darrens Garage Services">
+  <!-- Car silhouette -->
+  <g fill="none" stroke-linecap="round">
+    <!-- Green sweeping body line -->
+    <path d="M28 132 L64 106 L86 122 C150 62 260 28 360 30 C470 32 560 78 622 148 C640 170 636 190 616 198"
+          stroke="#6CBE45" stroke-width="11"/>
+    <!-- Grey cabin / window line -->
+    <path d="M188 106 C240 66 320 52 392 62 C430 68 458 84 478 104 L440 104 C400 76 330 68 270 82"
+          stroke="#9B9B9B" stroke-width="9"/>
+    <!-- Window pillar -->
+    <path d="M312 62 L322 96" stroke="#9B9B9B" stroke-width="8"/>
+    <!-- Black bonnet accent -->
+    <path d="M58 132 C110 108 168 104 218 118" stroke="#111111" stroke-width="9"/>
+    <!-- Black lower front accent -->
+    <path d="M160 152 C230 132 320 128 380 138" stroke="#111111" stroke-width="7"/>
+    <!-- Black rear accent -->
+    <path d="M478 158 C526 144 566 148 596 166" stroke="#111111" stroke-width="9"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="30" y="228" font-family="Verdana, Geneva, sans-serif" font-size="52" letter-spacing="1">
+    <tspan fill="#1A1A1A" font-weight="bold" stroke="#6CBE45" stroke-width="1.5">D</tspan><tspan fill="#9B9B9B">arrens </tspan><tspan fill="#1A1A1A" font-weight="bold" stroke="#6CBE45" stroke-width="1.5">G</tspan><tspan fill="#9B9B9B">arage </tspan><tspan fill="#1A1A1A" font-weight="bold" stroke="#6CBE45" stroke-width="1.5">S</tspan><tspan fill="#9B9B9B">ervices</tspan>
+  </text>
+</svg>

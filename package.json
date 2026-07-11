@@ -1,0 +1,7 @@
+{
+  "name": "darrens-garage-services",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Website for Darrens Garage Services, Eastbourne",
+  "type": "module"
+}
