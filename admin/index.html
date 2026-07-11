@@ -139,7 +139,6 @@
                 <button class="tab active" data-tab="subs">Subscribers</button>
                 <button class="tab" data-tab="stats">Statistics</button>
                 <button class="tab" data-tab="settings">Site settings</button>
-                <button class="tab" data-tab="progress">Progress</button>
             </div>
 
             <div id="tab-subs">
@@ -155,6 +154,14 @@
 
             <div id="tab-stats" class="hidden">
                 <div id="statsBody"><p style="color: var(--muted);">Loading…</p></div>
+
+                <hr style="border: none; border-top: 1px solid var(--line); margin: 30px 0;">
+                <h2 style="font-size: 1.15rem; margin-bottom: 6px;">Monthly statistics report</h2>
+                <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 14px;">
+                    A statistics summary email (visits, top pages, sources, campaigns, subscribers, enquiries) is sent automatically on the 1st of every month. You can also send it now.
+                </p>
+                <button class="btn btn-outline" id="sendReportBtn" style="cursor: pointer; font-family: inherit; font-size: 0.95rem;">Send report now</button>
+                <div class="form-status" id="reportStatus"></div>
             </div>
 
             <div id="tab-settings" class="hidden">
@@ -253,34 +260,6 @@
                 </form>
             </div>
 
-            <div id="tab-progress" class="hidden">
-                <h2 style="font-size: 1.15rem; margin-bottom: 14px;">Upcoming work</h2>
-                <div id="roadmapList"></div>
-                <div style="display: flex; gap: 10px; margin: 14px 0 34px;">
-                    <input id="newTask" type="text" placeholder="Add an upcoming task…"
-                           style="flex: 1; padding: 10px 14px; border-radius: 8px; background: var(--bg-2); border: 1.5px solid var(--line); color: var(--text); font-family: inherit;">
-                    <button class="btn" id="addTaskBtn" style="border: none; cursor: pointer; font-family: inherit;">Add</button>
-                </div>
-
-                <h2 style="font-size: 1.15rem; margin-bottom: 14px;">Work completed</h2>
-                <div style="display: flex; gap: 10px; margin-bottom: 18px;">
-                    <input id="newLogEntry" type="text" placeholder="Add a completed item (goes under today's date)…"
-                           style="flex: 1; padding: 10px 14px; border-radius: 8px; background: var(--bg-2); border: 1.5px solid var(--line); color: var(--text); font-family: inherit;">
-                    <button class="btn" id="addLogBtn" style="border: none; cursor: pointer; font-family: inherit;">Add</button>
-                </div>
-                <div id="changelogList"></div>
-
-                <button class="btn" id="saveProgressBtn" style="border: none; cursor: pointer; font-family: inherit; font-size: 1rem; margin-top: 20px;">Save changes</button>
-                <div class="form-status" id="progressStatus"></div>
-
-                <hr style="border: none; border-top: 1px solid var(--line); margin: 30px 0;">
-                <h2 style="font-size: 1.15rem; margin-bottom: 6px;">Monthly client report</h2>
-                <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 14px;">
-                    A summary email (subscribers, enquiries, work done, what's next) is sent automatically on the 1st of every month. You can also send it now.
-                </p>
-                <button class="btn btn-outline" id="sendReportBtn" style="cursor: pointer; font-family: inherit; font-size: 0.95rem;">Send report now</button>
-                <div class="form-status" id="reportStatus"></div>
-            </div>
         </div>
 
     </div>
@@ -334,7 +313,6 @@
                     }
                 }
             } catch {}
-            loadProgress();
             loadStats();
             return true;
         }
@@ -364,7 +342,7 @@
         document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
             t.classList.add('active');
-            ['subs', 'stats', 'settings', 'progress'].forEach((name) =>
+            ['subs', 'stats', 'settings'].forEach((name) =>
                 document.getElementById('tab-' + name).classList.toggle('hidden', t.dataset.tab !== name));
         }));
 
@@ -754,86 +732,6 @@
                 el.innerHTML = `<p style="color:#c0705a;">${err.message}</p>`;
             }
         }
-
-        // ----- Progress tab (changelog + roadmap) -----
-        let progress = { changelog: [], roadmap: [] };
-
-        function renderProgress() {
-            const rl = document.getElementById('roadmapList');
-            rl.innerHTML = progress.roadmap.map((t, i) => `
-                <div class="task-row ${t.status === 'done' ? 'done' : ''}">
-                    <span class="t-title">${t.title.replace(/</g, '&lt;')}</span>
-                    <select data-i="${i}">
-                        <option value="planned" ${t.status === 'planned' ? 'selected' : ''}>Planned</option>
-                        <option value="in-progress" ${t.status === 'in-progress' ? 'selected' : ''}>In progress</option>
-                        <option value="done" ${t.status === 'done' ? 'selected' : ''}>Done</option>
-                    </select>
-                    <button class="t-del" data-i="${i}" title="Remove">&#10005;</button>
-                </div>`).join('') || '<p style="color: var(--muted); font-size: 0.9rem;">No upcoming tasks.</p>';
-
-            rl.querySelectorAll('select').forEach((s) => s.addEventListener('change', () => {
-                progress.roadmap[+s.dataset.i].status = s.value;
-                renderProgress();
-            }));
-            rl.querySelectorAll('.t-del').forEach((b) => b.addEventListener('click', () => {
-                progress.roadmap.splice(+b.dataset.i, 1);
-                renderProgress();
-            }));
-
-            document.getElementById('changelogList').innerHTML = progress.changelog.map((e) =>
-                e.items.map((i) => `<div class="log-item">${i.replace(/</g, '&lt;')}</div>`).join('')).join('');
-        }
-
-        async function loadProgress() {
-            try {
-                const r = await fetch('/api/admin/changelog');
-                if (!r.ok) return;
-                progress = (await r.json()).data;
-                renderProgress();
-            } catch {}
-        }
-
-        document.getElementById('addTaskBtn').addEventListener('click', () => {
-            const inp = document.getElementById('newTask');
-            if (!inp.value.trim()) return;
-            progress.roadmap.push({ title: inp.value.trim(), status: 'planned' });
-            inp.value = '';
-            renderProgress();
-        });
-
-        document.getElementById('addLogBtn').addEventListener('click', () => {
-            const inp = document.getElementById('newLogEntry');
-            if (!inp.value.trim()) return;
-            const today = new Date().toISOString().slice(0, 10);
-            let group = progress.changelog.find((e) => e.date === today);
-            if (!group) {
-                group = { date: today, items: [] };
-                progress.changelog.unshift(group);
-            }
-            group.items.push(inp.value.trim());
-            inp.value = '';
-            renderProgress();
-        });
-
-        document.getElementById('saveProgressBtn').addEventListener('click', async () => {
-            const status = document.getElementById('progressStatus');
-            const btn = document.getElementById('saveProgressBtn');
-            btn.disabled = true; btn.textContent = 'Saving…';
-            try {
-                const r = await fetch('/api/admin/changelog', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(progress),
-                });
-                const data = await r.json();
-                if (!r.ok) throw new Error(data.error || 'Could not save.');
-                setStatus(status, 'Saved.', true);
-            } catch (err) {
-                setStatus(status, err.message, false);
-            } finally {
-                btn.disabled = false; btn.textContent = 'Save changes';
-            }
-        });
 
         // Help popovers
         document.querySelectorAll('.help-btn').forEach((b) => b.addEventListener('click', () => {

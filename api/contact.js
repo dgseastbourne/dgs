@@ -1,4 +1,6 @@
 // POST /api/contact — sends the contact form message via Resend
+import { emailShell } from './_email.js';
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -42,14 +44,20 @@ export default async function handler(req, res) {
                 to: [to],
                 reply_to: email,
                 subject: `New enquiry from ${name} — DGS website`,
-                html: `
-                    <h2>New website enquiry</h2>
-                    <p><strong>Name:</strong> ${esc(name)}</p>
-                    <p><strong>Email:</strong> ${esc(email)}</p>
-                    <p><strong>Phone:</strong> ${esc(phone || '—')}</p>
-                    <p><strong>Message:</strong></p>
-                    <p>${esc(message).replace(/\n/g, '<br>')}</p>
-                `,
+                html: emailShell({
+                    title: 'New website enquiry',
+                    subtitle: 'Someone just sent a message through the contact form.',
+                    body: `
+                        <table style="width:100%;border-collapse:collapse;font-size:14px">
+                            <tr><td style="padding:8px 0;color:#999;width:90px">Name</td><td style="padding:8px 0;color:#111;font-weight:bold">${esc(name)}</td></tr>
+                            <tr><td style="padding:8px 0;color:#999;border-top:1px solid #eee">Email</td><td style="padding:8px 0;border-top:1px solid #eee"><a href="mailto:${esc(email)}" style="color:#4d8a2f">${esc(email)}</a></td></tr>
+                            <tr><td style="padding:8px 0;color:#999;border-top:1px solid #eee">Phone</td><td style="padding:8px 0;color:#111;border-top:1px solid #eee">${esc(phone || '—')}</td></tr>
+                        </table>
+                        <div style="background:#f4f9f1;border-left:3px solid #6CBE45;border-radius:6px;padding:14px 16px;margin-top:16px;font-size:14px;color:#333">
+                            ${esc(message).replace(/\n/g, '<br>')}
+                        </div>
+                        <p style="font-size:12px;color:#999;margin-top:14px">Tip: just hit Reply — it goes straight to the customer.</p>`,
+                }),
             }),
         });
 

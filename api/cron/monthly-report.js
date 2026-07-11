@@ -1,18 +1,9 @@
-// Monthly site report — runs on Vercel Cron (1st of each month) or manually
-// from the admin dashboard. Emails subscriber growth, enquiries, work done
-// (from changelog.json) and upcoming work to the client.
+// Monthly statistics report — runs on Vercel Cron (1st of each month) or
+// manually from the admin dashboard. Emails site statistics: visits, top
+// pages, traffic sources, campaigns, subscribers and enquiries.
 import { getSession } from '../_auth.js';
-
-const REPO = process.env.GITHUB_REPO || 'dgseastbourne/dgs';
-
-async function ghFile(token, path) {
-    const r = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'User-Agent': 'dgs-report' },
-    });
-    if (!r.ok) return null;
-    const f = await r.json();
-    return JSON.parse(Buffer.from(f.content, 'base64').toString());
-}
+import { redisConfig, redisPipeline } from '../_redis.js';
+import { emailShell } from '../_email.js';
 
 async function brevoList(apiKey, listId) {
     if (!apiKey || !listId) return null;
@@ -30,6 +21,34 @@ async function brevoList(apiKey, listId) {
     };
 }
 
+async function siteStats() {
+    if (!redisConfig()) return null;
+    const days = [];
+    for (let i = 29; i >= 0; i--) {
+        days.push(new Date(Date.now() - i * 24 * 3600 * 1000).toISOString().slice(0, 10));
+    }
+    const month = days[days.length - 1].slice(0, 7);
+    const [views, pages, refs, camps] = await redisPipeline([
+        ['MGET', ...days.map((d) => `v:${d}`)],
+        ['HGETALL', `pm:${month}`],
+        ['HGETALL', `rm:${month}`],
+        ['HGETALL', `cm:${month}`],
+    ]);
+    const toPairs = (flat) => {
+        const out = [];
+        for (let i = 0; i < (flat || []).length; i += 2) {
+            out.push({ key: flat[i], count: parseInt(flat[i + 1], 10) || 0 });
+        }
+        return out.sort((a, b) => b.count - a.count).slice(0, 5);
+    };
+    return {
+        total30: (views || []).reduce((s, v) => s + (parseInt(v, 10) || 0), 0),
+        topPages: toPairs(pages),
+        topReferrers: toPairs(refs),
+        topCampaigns: toPairs(camps),
+    };
+}
+
 export default async function handler(req, res) {
     // Allow: Vercel Cron (Authorization: Bearer CRON_SECRET) or a signed-in admin
     const auth = req.headers.authorization || '';
@@ -40,67 +59,48 @@ export default async function handler(req, res) {
     const resendKey = process.env.RESEND_API_KEY;
     const to = process.env.REPORT_TO_EMAIL || process.env.CONTACT_TO_EMAIL;
     const from = process.env.CONTACT_FROM_EMAIL || 'onboarding@resend.dev';
-    const ghToken = process.env.GITHUB_TOKEN;
     if (!resendKey || !to) return res.status(500).json({ error: 'Report email is not configured.' });
 
     try {
-        const [subs, leads, changelog, settings] = await Promise.all([
+        const [subs, leads, stats] = await Promise.all([
             brevoList(process.env.BREVO_API_KEY, parseInt(process.env.BREVO_LIST_ID, 10)),
             brevoList(process.env.BREVO_API_KEY, parseInt(process.env.BREVO_LEADS_LIST_ID, 10)),
-            ghToken ? ghFile(ghToken, 'changelog.json') : null,
-            ghToken ? ghFile(ghToken, 'settings.json') : null,
+            siteStats(),
         ]);
 
-        const siteUrl = (settings && settings.siteUrl) || 'https://dgs-lime.vercel.app';
         const monthName = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-        const cutoff = Date.now() - 31 * 24 * 3600 * 1000;
 
-        const doneRecent = (changelog?.changelog || [])
-            .filter((e) => new Date(e.date).getTime() > cutoff)
-            .flatMap((e) => e.items);
-        const upcoming = (changelog?.roadmap || []).filter((t) => t.status !== 'done');
+        const card = (num, label) => `
+            <td style="text-align:center;padding:14px;background:#f4f9f1;border-radius:10px">
+                <div style="font-size:26px;font-weight:bold;color:#4d8a2f">${num}</div>
+                <div style="font-size:12px;color:#666">${label}</div>
+            </td>`;
+        const table = (items, empty) => items && items.length
+            ? `<table style="width:100%;border-collapse:collapse;font-size:14px">${items.map((x) => `
+                <tr><td style="padding:6px 0;border-bottom:1px solid #eee;color:#444">${x.key}</td>
+                <td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right;color:#111;font-weight:bold">${x.count}</td></tr>`).join('')}</table>`
+            : `<p style="font-size:13px;color:#999">${empty}</p>`;
 
-        const li = (arr) => arr.map((x) => `<li style="margin-bottom:6px">${x}</li>`).join('') || '<li>—</li>';
-        const statLabel = { 'planned': 'Planned', 'in-progress': 'In progress' };
+        const html = emailShell({
+            title: 'Website statistics',
+            subtitle: monthName,
+            body: `
+                <table style="width:100%;border-collapse:separate;border-spacing:8px 0;margin-bottom:24px"><tr>
+                    ${card(stats ? stats.total30 : '—', 'Page views<br>last 30 days')}
+                    ${card(subs ? subs.total : '—', `Subscribers<br>(${subs ? '+' + subs.recent : '—'} this month)`)}
+                    ${card(leads ? leads.recent : '—', 'Enquiries<br>this month')}
+                </tr></table>
 
-        const html = `
-        <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;color:#333">
-            <div style="background:#0c0e0c;padding:24px;border-radius:12px 12px 0 0">
-                <span style="color:#e8ece7;font-size:20px;font-weight:bold"><span style="color:#6CBE45">D</span>arrens <span style="color:#6CBE45">G</span>arage <span style="color:#6CBE45">S</span>ervices</span>
-                <div style="color:#9aa39a;font-size:13px;margin-top:4px">Website report — ${monthName}</div>
-            </div>
-            <div style="border:1px solid #e5e5e5;border-top:none;padding:24px;border-radius:0 0 12px 12px">
-                <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
-                    <tr>
-                        <td style="text-align:center;padding:14px;background:#f4f9f1;border-radius:10px">
-                            <div style="font-size:28px;font-weight:bold;color:#4d8a2f">${subs ? subs.total : '—'}</div>
-                            <div style="font-size:12px;color:#666">Newsletter subscribers<br>(${subs ? '+' + subs.recent : '—'} this month)</div>
-                        </td>
-                        <td style="width:12px"></td>
-                        <td style="text-align:center;padding:14px;background:#f4f9f1;border-radius:10px">
-                            <div style="font-size:28px;font-weight:bold;color:#4d8a2f">${leads ? leads.recent : '—'}</div>
-                            <div style="font-size:12px;color:#666">Website enquiries<br>this month</div>
-                        </td>
-                    </tr>
-                </table>
+                <h3 style="color:#0c0e0c;border-bottom:2px solid #6CBE45;padding-bottom:6px">Top pages</h3>
+                ${table(stats && stats.topPages, 'No page data yet.')}
 
-                <h3 style="color:#0c0e0c;border-bottom:2px solid #6CBE45;padding-bottom:6px">Work completed this month</h3>
-                <ul style="padding-left:20px;font-size:14px;line-height:1.5">${li(doneRecent)}</ul>
+                <h3 style="color:#0c0e0c;border-bottom:2px solid #6CBE45;padding-bottom:6px;margin-top:22px">Traffic sources</h3>
+                ${table(stats && stats.topReferrers, 'No referrer data yet — most visits were direct.')}
 
-                <h3 style="color:#0c0e0c;border-bottom:2px solid #6CBE45;padding-bottom:6px">Coming next</h3>
-                <ul style="padding-left:20px;font-size:14px;line-height:1.5">
-                    ${li(upcoming.map((t) => `${t.title} <span style="color:#999;font-size:12px">(${statLabel[t.status] || t.status})</span>`))}
-                </ul>
-
-                <p style="font-size:13px;color:#666;margin-top:24px">
-                    Website: <a href="${siteUrl}" style="color:#4d8a2f">${siteUrl.replace('https://', '')}</a>
-                </p>
-                <p style="font-size:12px;color:#999;border-top:1px solid #eee;padding-top:14px">
-                    Prepared automatically by your website — maintained by
-                    <a href="https://digital-ev.co.uk/" style="color:#6d5cf6;font-weight:bold">Digital EV</a>
-                </p>
-            </div>
-        </div>`;
+                <h3 style="color:#0c0e0c;border-bottom:2px solid #6CBE45;padding-bottom:6px;margin-top:22px">Campaigns</h3>
+                ${table(stats && stats.topCampaigns, 'No campaign visits this month.')}`,
+            footerNote: 'Statistics are cookie-free and store no personal data. Report prepared automatically.',
+        });
 
         const send = await fetch('https://api.resend.com/emails', {
             method: 'POST',
@@ -108,7 +108,7 @@ export default async function handler(req, res) {
             body: JSON.stringify({
                 from: `DGS Website Report <${from}>`,
                 to: [to],
-                subject: `Your website report — ${monthName} | Darrens Garage Services`,
+                subject: `Website statistics — ${monthName} | Darrens Garage Services`,
                 html,
             }),
         });

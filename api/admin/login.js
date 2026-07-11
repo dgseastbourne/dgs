@@ -1,5 +1,6 @@
 // POST /api/admin/login — emails a magic sign-in link if the address matches ADMIN_EMAIL
 import { sign } from '../_auth.js';
+import { emailShell, emailButton } from '../_email.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -34,12 +35,17 @@ export default async function handler(req, res) {
                 from: `DGS Admin <${from}>`,
                 to: [adminEmail],
                 subject: 'Your DGS admin sign-in link',
-                html: `
-                    <h2>Sign in to the DGS dashboard</h2>
-                    <p>Click the link below to sign in. It expires in 15 minutes.</p>
-                    <p><a href="${link}">Sign in to the dashboard</a></p>
-                    <p style="color:#888;font-size:13px">If you didn't request this, you can ignore this email.</p>
-                `,
+                html: emailShell({
+                    title: 'Sign in to the dashboard',
+                    subtitle: 'Use the button below — the link expires in 15 minutes.',
+                    body: `
+                        ${emailButton(link, 'Sign in to the dashboard')}
+                        <p style="font-size:12px;color:#999;text-align:center;margin:0">
+                            Button not working? Copy this address into your browser:<br>
+                            <span style="word-break:break-all;color:#777">${link}</span>
+                        </p>`,
+                    footerNote: "If you didn't request this email, you can safely ignore it.",
+                }),
             }),
         });
         if (!r.ok) {
