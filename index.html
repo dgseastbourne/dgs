@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Darrens Garage Services - Coming Soon</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #587351 0%, #4d6846 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 90%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .logo-section {
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            max-width: 180px;
+            height: auto;
+            margin: 0 auto 20px;
+            display: block;
+        }
+
+        .logo-placeholder {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #80c26a 0%, #72886c 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #424242;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .message {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 35px;
+            border-left: 4px solid #80c26a;
+        }
+
+        .message p {
+            color: #555;
+            font-size: 1rem;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .message p:last-child {
+            margin-bottom: 0;
+        }
+
+        .highlight {
+            color: #80c26a;
+            font-weight: 600;
+        }
+
+        .signup-form {
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .form-group input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #80c26a;
+        }
+
+        .form-group button {
+            padding: 12px 28px;
+            background: #80c26a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .form-group button:hover {
+            background: #72886c;
+        }
+
+        .form-note {
+            font-size: 0.85rem;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        .social-links {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+
+        .social-links p {
+            color: #999;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .social-icons a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            text-decoration: none;
+            color: #1a1a2e;
+            transition: all 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .social-icons a:hover {
+            background: #80c26a;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .footer-text {
+            margin-top: 40px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 40px 25px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .form-group {
+                flex-direction: column;
+            }
+
+            .form-group button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-section">
+            <!-- Logo placeholder - replace with actual logo -->
+            <div class="logo-placeholder">Logo Here</div>
+            <!-- Or use an image tag when ready:
+            <img src="logo.png" alt="Darrens Garage Services" class="logo">
+            -->
+        </div>
+
+        <h1>Coming Soon</h1>
+        <p class="subtitle">Darrens Garage Services - Professional Auto Repair & Maintenance</p>
+
+        <div class="message">
+            <p>🚗 We're building something <span class="highlight">great</span> for you!</p>
+            <p>Our new website is under development and will launch very soon. Be among the first to know when we go live.</p>
+        </div>
+
+        <div class="signup-form">
+            <form onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <input
+                        type="email"
+                        placeholder="Enter your email address"
+                        required
+                        aria-label="Email address"
+                    >
+                    <button type="submit">Notify Me</button>
+                </div>
+            </form>
+            <p class="form-note">We'll send you a notification when we launch. No spam, we promise.</p>
+        </div>
+
+        <div class="social-links">
+            <p>Follow us on social media:</p>
+            <div class="social-icons">
+                <a href="https://www.facebook.com/DarrensGarageServices/" target="_blank" rel="noopener noreferrer" title="Facebook">
+                    f
+                </a>
+                <a href="https://share.google/oOB3fS1IdrR9UE4LA" target="_blank" rel="noopener noreferrer" title="Google">
+                    G
+                </a>
+            </div>
+        </div>
+
+        <p class="footer-text">Eastbourne, UK | Professional Car Servicing & Repair</p>
+    </div>
+
+    <script>
+        function handleSignup(event) {
+            event.preventDefault();
+            const email = event.target.querySelector('input[type="email"]').value;
+            alert(`Thanks! We'll notify ${email} when we launch.`);
+            event.target.reset();
+        }
+    </script>
+</body>
+</html>
