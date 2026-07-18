@@ -67,7 +67,7 @@ header.hero {
 .hero-logo { max-width: 420px; width: 85%; height: auto; display: block; }
 .hero-logo-card {
     display: inline-block; background: #ffffff; border-radius: 14px;
-    padding: 18px 28px 8px; margin-bottom: 36px;
+    padding: 20px 28px; margin-bottom: 36px;
     box-shadow: 0 0 60px rgba(108, 190, 69, 0.18);
 }
 .eyebrow {
