@@ -7,6 +7,71 @@ if (menuBtn && navLinks) {
         a.addEventListener('click', () => navLinks.classList.remove('open')));
 }
 
+// ---------- Cookie consent (UK GDPR / PECR) ----------
+// 'granted' | 'denied' | null (no choice yet). Storing the choice itself is
+// strictly necessary and exempt from consent requirements.
+const CONSENT_KEY = 'dgs_consent';
+const getConsent = () => {
+    try { return localStorage.getItem(CONSENT_KEY); } catch { return null; }
+};
+const consentListeners = [];
+const onConsentGranted = (fn) => {
+    if (getConsent() === 'granted') fn();
+    else consentListeners.push(fn);
+};
+const setConsent = (value) => {
+    try { localStorage.setItem(CONSENT_KEY, value); } catch {}
+    document.querySelector('.cookie-banner')?.remove();
+    if (value === 'granted') consentListeners.splice(0).forEach((fn) => fn());
+};
+
+const showBanner = () => {
+    if (document.querySelector('.cookie-banner')) return;
+    const b = document.createElement('div');
+    b.className = 'cookie-banner';
+    b.setAttribute('role', 'dialog');
+    b.setAttribute('aria-label', 'Cookie consent');
+    b.innerHTML = `
+        <p>We'd like to use optional analytics cookies to understand how the site is used —
+        we won't set any unless you accept. Our basic visit statistics are cookie-free.
+        <a href="/privacy">Privacy &amp; cookies</a></p>
+        <div class="cookie-actions">
+            <button type="button" class="btn cb-accept">Accept</button>
+            <button type="button" class="btn btn-outline cb-reject">Reject</button>
+        </div>`;
+    b.querySelector('.cb-accept').addEventListener('click', () => setConsent('granted'));
+    b.querySelector('.cb-reject').addEventListener('click', () => setConsent('denied'));
+    document.body.appendChild(b);
+};
+
+if (!getConsent()) showBanner();
+
+// "Cookie settings" link in the footer (lets visitors change their mind)
+const footerLinks = document.querySelector('.footer-links');
+if (footerLinks) {
+    const cs = document.createElement('a');
+    cs.href = '#';
+    cs.textContent = 'Cookie settings';
+    cs.addEventListener('click', (e) => { e.preventDefault(); showBanner(); });
+    footerLinks.appendChild(cs);
+}
+
+// ---------- Click-to-load Google Maps (no Google cookies until then) ----------
+const loadMap = (ph) => {
+    const f = document.createElement('iframe');
+    f.width = '600';
+    f.height = '380';
+    f.src = ph.dataset.mapSrc;
+    f.loading = 'lazy';
+    f.referrerPolicy = 'no-referrer-when-downgrade';
+    f.title = ph.dataset.mapTitle || 'Map — Darrens Garage Services, Eastbourne';
+    ph.replaceWith(f);
+};
+document.querySelectorAll('.map-consent').forEach((ph) => {
+    ph.querySelector('.map-load-btn')?.addEventListener('click', () => loadMap(ph));
+    onConsentGranted(() => { if (ph.isConnected) loadMap(ph); });
+});
+
 // Site settings (settings.json): WhatsApp number + trackers
 const prefix = document.querySelector('link[href*="assets/style.css"]')
     .getAttribute('href').startsWith('../') ? '../' : '';
@@ -28,17 +93,27 @@ fetch(prefix + 'settings.json')
         if (s.facebook) document.querySelectorAll('.soc-fb').forEach((a) => { a.href = s.facebook; });
         if (s.google) document.querySelectorAll('.soc-g').forEach((a) => { a.href = s.google; });
 
-        // Google Analytics 4
+        // Google Analytics 4 — only ever loaded AFTER the visitor accepts
+        // analytics cookies (Google Consent Mode v2, default denied).
         if (/^G-[A-Z0-9]{4,14}$/.test(s.ga4Id || '')) {
-            const gs = document.createElement('script');
-            gs.async = true;
-            gs.src = `https://www.googletagmanager.com/gtag/js?id=${s.ga4Id}`;
-            document.head.appendChild(gs);
-            window.dataLayer = window.dataLayer || [];
-            function gtag() { window.dataLayer.push(arguments); }
-            window.gtag = gtag;
-            gtag('js', new Date());
-            gtag('config', s.ga4Id);
+            onConsentGranted(() => {
+                window.dataLayer = window.dataLayer || [];
+                function gtag() { window.dataLayer.push(arguments); }
+                window.gtag = gtag;
+                gtag('consent', 'default', {
+                    ad_storage: 'denied',
+                    ad_user_data: 'denied',
+                    ad_personalization: 'denied',
+                    analytics_storage: 'denied',
+                });
+                gtag('consent', 'update', { analytics_storage: 'granted' });
+                const gs = document.createElement('script');
+                gs.async = true;
+                gs.src = `https://www.googletagmanager.com/gtag/js?id=${s.ga4Id}`;
+                document.head.appendChild(gs);
+                gtag('js', new Date());
+                gtag('config', s.ga4Id);
+            });
         }
 
         // Verification meta tags (best effort — DNS/GA methods are more reliable)
