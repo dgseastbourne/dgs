@@ -9,10 +9,25 @@ export default async function handler(req, res) {
     if (!redisConfig()) return res.status(200).json({ ok: false }); // storage not connected yet
 
     try {
-        const { p, r, us, uc } = req.body || {};
+        const { p, r, us, uc, t } = req.body || {};
         const path = String(p || '/').slice(0, 120);
         if (!/^\/[a-zA-Z0-9\-_/.]*$/.test(path)) return res.status(200).json({ ok: false });
         if (path.startsWith('/admin')) return res.status(200).json({ ok: true }); // don't count admin
+
+        // Call / WhatsApp button clicks — tracked separately from page views
+        const clickType = t === 'call' || t === 'whatsapp' ? t : null;
+        if (clickType) {
+            const day = new Date().toISOString().slice(0, 10);
+            const month = day.slice(0, 7);
+            const year = month.slice(0, 4);
+            await redisPipeline([
+                ['INCR', `clk:${clickType}:d:${day}`], ['EXPIRE', `clk:${clickType}:d:${day}`, YEAR],
+                ['INCR', `clk:${clickType}:m:${month}`], ['EXPIRE', `clk:${clickType}:m:${month}`, FIVE_YEARS],
+                ['INCR', `clk:${clickType}:y:${year}`], ['EXPIRE', `clk:${clickType}:y:${year}`, FIVE_YEARS],
+                ['SADD', 'stat-years', year], ['EXPIRE', 'stat-years', FIVE_YEARS],
+            ]);
+            return res.status(200).json({ ok: true });
+        }
 
         let ref = '';
         try {

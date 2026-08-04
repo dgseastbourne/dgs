@@ -65,10 +65,10 @@ header.hero {
     text-align: center;
 }
 .hero-logo {
-    max-width: 420px; width: 85%; height: auto; display: block;
+    max-width: 420px; width: 85%; height: auto; display: block; margin: 0 auto;
     filter: drop-shadow(0 0 28px rgba(108, 190, 69, 0.22));
 }
-.hero-logo-card { display: inline-block; margin-bottom: 36px; }
+.hero-logo-card { display: block; margin-bottom: 36px; }
 .eyebrow {
     display: inline-block; color: var(--green); font-weight: 600;
     font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase;

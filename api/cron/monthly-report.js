@@ -28,11 +28,12 @@ async function siteStats() {
         days.push(new Date(Date.now() - i * 24 * 3600 * 1000).toISOString().slice(0, 10));
     }
     const month = days[days.length - 1].slice(0, 7);
-    const [views, pages, refs, camps] = await redisPipeline([
+    const [views, pages, refs, camps, clicks] = await redisPipeline([
         ['MGET', ...days.map((d) => `v:${d}`)],
         ['HGETALL', `pm:${month}`],
         ['HGETALL', `rm:${month}`],
         ['HGETALL', `cm:${month}`],
+        ['MGET', `clk:call:m:${month}`, `clk:whatsapp:m:${month}`],
     ]);
     const toPairs = (flat) => {
         const out = [];
@@ -46,6 +47,8 @@ async function siteStats() {
         topPages: toPairs(pages),
         topReferrers: toPairs(refs),
         topCampaigns: toPairs(camps),
+        callClicks: parseInt(clicks?.[0], 10) || 0,
+        waClicks: parseInt(clicks?.[1], 10) || 0,
     };
 }
 
@@ -89,6 +92,12 @@ export default async function handler(req, res) {
                     ${card(stats ? stats.total30 : '—', 'Page views<br>last 30 days')}
                     ${card(subs ? subs.total : '—', `Subscribers<br>(${subs ? '+' + subs.recent : '—'} this month)`)}
                     ${card(leads ? leads.recent : '—', 'Enquiries<br>this month')}
+                </tr></table>
+
+                <h3 style="color:#0c0e0c;border-bottom:2px solid #6CBE45;padding-bottom:6px">Call &amp; WhatsApp clicks — ${monthName}</h3>
+                <table style="width:100%;border-collapse:separate;border-spacing:8px 0;margin-bottom:24px"><tr>
+                    ${card(stats ? stats.callClicks : '—', 'Call clicks')}
+                    ${card(stats ? stats.waClicks : '—', 'WhatsApp clicks')}
                 </tr></table>
 
                 <h3 style="color:#0c0e0c;border-bottom:2px solid #6CBE45;padding-bottom:6px">Top pages</h3>

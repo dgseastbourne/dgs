@@ -129,16 +129,11 @@ fetch(prefix + 'settings.json')
     })
     .catch(() => {});
 
-// Anonymous page-view beacon (no cookies, no personal data)
-try {
-    if (location.protocol.startsWith('http')) {
-        const q = new URLSearchParams(location.search);
-        const payload = JSON.stringify({
-            p: location.pathname,
-            r: document.referrer || '',
-            us: q.get('utm_source') || '',
-            uc: q.get('utm_campaign') || '',
-        });
+// Anonymous tracking beacon (no cookies, no personal data)
+const sendTrack = (data) => {
+    try {
+        if (!location.protocol.startsWith('http')) return;
+        const payload = JSON.stringify(data);
         if (!(navigator.sendBeacon &&
               navigator.sendBeacon('/api/track', new Blob([payload], { type: 'application/json' })))) {
             fetch('/api/track', {
@@ -148,8 +143,25 @@ try {
                 keepalive: true,
             }).catch(() => {});
         }
-    }
-} catch {}
+    } catch {}
+};
+
+// Page-view beacon
+const q = new URLSearchParams(location.search);
+sendTrack({
+    p: location.pathname,
+    r: document.referrer || '',
+    us: q.get('utm_source') || '',
+    uc: q.get('utm_campaign') || '',
+});
+
+// Call & WhatsApp click tracking — counts clicks on any "Call us" (tel: link)
+// or WhatsApp link (.wa-link), site-wide, daily/monthly/yearly.
+document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="tel:"], .wa-link');
+    if (!a) return;
+    sendTrack({ p: location.pathname, t: a.classList.contains('wa-link') ? 'whatsapp' : 'call' });
+});
 
 // Animated stat counters
 const counters = document.querySelectorAll('.stat .num[data-count]');

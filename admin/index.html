@@ -29,6 +29,27 @@
         }
         .camp-stats h4 { color: var(--green); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; margin: 14px 0 8px; }
         .camp-stats h4:first-child { margin-top: 0; }
+
+        /* Themed chart tooltips (replace the native grey browser title= bubble) */
+        [data-tip] { position: relative; cursor: default; }
+        [data-tip]::after,
+        [data-tip]::before {
+            opacity: 0; visibility: hidden; pointer-events: none; z-index: 30;
+            position: absolute; left: 50%;
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+        [data-tip]::after {
+            content: attr(data-tip);
+            bottom: calc(100% + 10px); transform: translate(-50%, 4px);
+            background: var(--card); color: var(--text); border: 1px solid var(--green);
+            border-radius: 8px; padding: 6px 10px; font-size: 0.75rem; font-weight: 600;
+            white-space: nowrap; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        [data-tip]::before {
+            content: ""; bottom: calc(100% + 4px); transform: translate(-50%, 4px);
+            border: 5px solid transparent; border-top-color: var(--green);
+        }
+        [data-tip]:hover::after, [data-tip]:hover::before { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
         .admin-card {
             background: var(--card); border: 1px solid var(--line); border-radius: 14px;
             padding: 36px;
@@ -373,7 +394,7 @@
 
                 const max = Math.max(...s.daily.map((d) => d.views), 1);
                 const bars = s.daily.map((d) => `
-                    <div title="${d.date}: ${d.views} views" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end;">
+                    <div data-tip="${d.date}: ${d.views} views" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end;">
                         <div style="background: var(--green); border-radius: 3px 3px 0 0; min-height: 2px; height: ${Math.round((d.views / max) * 100)}%;"></div>
                     </div>`).join('');
 
@@ -387,6 +408,7 @@
                         <button class="tab" data-st="pages" style="font-size:0.85rem; padding:8px 12px;">Pages</button>
                         <button class="tab" data-st="sources" style="font-size:0.85rem; padding:8px 12px;">Sources</button>
                         <button class="tab" data-st="campaigns" style="font-size:0.85rem; padding:8px 12px;">Campaigns</button>
+                        <button class="tab" data-st="clicks" style="font-size:0.85rem; padding:8px 12px;">Clicks</button>
                         <button class="tab" data-st="tools" style="font-size:0.85rem; padding:8px 12px;">Link &amp; QR</button>
                         <button class="tab" data-st="history" style="font-size:0.85rem; padding:8px 12px;">History</button>
                     </div>
@@ -397,7 +419,12 @@
                             <div class="stat"><div class="num">${s.prevMonthTotal}</div><div class="lbl">Views — previous month</div></div>
                         </div>
                         <div style="display:flex; gap:2px; height:120px; align-items:stretch; margin: 10px 0 10px; border-bottom: 1px solid var(--line); padding-bottom: 2px;">${bars}</div>
-                        <p style="color: var(--muted); font-size: 0.8rem;">Daily views, last 30 days. Hover a bar for the exact date.</p>
+                        <p style="color: var(--muted); font-size: 0.8rem; margin-bottom: 22px;">Daily views, last 30 days. Hover a bar for the exact date.</p>
+                        <div class="stat-row">
+                            <div class="stat"><div class="num">${s.callClicksMonth}</div><div class="lbl">Call clicks — this month</div></div>
+                            <div class="stat"><div class="num">${s.waClicksMonth}</div><div class="lbl">WhatsApp clicks — this month</div></div>
+                        </div>
+                        <p style="color: var(--muted); font-size: 0.8rem; margin-top: 8px;">See the <strong>Clicks</strong> tab for daily and yearly breakdowns.</p>
                     </div>
 
                     <div id="st-pages" class="hidden">
@@ -415,6 +442,12 @@
                         <h2 style="font-size:1.05rem; margin-bottom:10px;">Campaigns (UTM) this month</h2>
                         <table class="subs"><tbody>${list(s.topCampaigns, 'campaign visits')}</tbody></table>
                         <p style="color: var(--muted); font-size: 0.8rem; margin-top: 12px;">Visits through links made in the Link &amp; QR tab — exact attribution per post, campaign or QR code.</p>
+                    </div>
+
+                    <div id="st-clicks" class="hidden">
+                        <h2 style="font-size:1.05rem; margin-bottom:10px;">Call &amp; WhatsApp clicks</h2>
+                        <p style="color: var(--muted); font-size: 0.85rem; margin-bottom: 14px;">Counts clicks on any "Call us" link or WhatsApp button, site-wide.</p>
+                        <div id="clicksView"><p style="color: var(--muted); font-size: 0.9rem;">Loading…</p></div>
                     </div>
 
                     <div id="st-tools" class="hidden">
@@ -491,9 +524,58 @@
                 document.querySelectorAll('#statSubtabs .tab').forEach((t) => t.addEventListener('click', () => {
                     document.querySelectorAll('#statSubtabs .tab').forEach((x) => x.classList.remove('active'));
                     t.classList.add('active');
-                    ['overview', 'pages', 'sources', 'campaigns', 'tools', 'history'].forEach((name) =>
+                    ['overview', 'pages', 'sources', 'campaigns', 'clicks', 'tools', 'history'].forEach((name) =>
                         document.getElementById('st-' + name).classList.toggle('hidden', t.dataset.st !== name));
+                    if (t.dataset.st === 'clicks') loadClicks();
                 }));
+
+                // Call & WhatsApp clicks — daily / monthly / yearly (loaded once, on first visit to the tab)
+                let clicksLoaded = false;
+                async function loadClicks() {
+                    if (clicksLoaded) return;
+                    clicksLoaded = true;
+                    const view = document.getElementById('clicksView');
+                    try {
+                        const c = await fetch('/api/admin/stats?clicks=1').then((r) => r.json());
+                        if (c.error) throw new Error(c.error);
+
+                        const mNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                        const chart = (call, wa, h, lbl) => {
+                            const mx = Math.max(...call.map((x) => x.clicks), ...wa.map((x) => x.clicks), 1);
+                            return `<div style="display:flex; gap:3px; height:${h}px; align-items:stretch;">` +
+                                call.map((x, i) => `
+                                    <div data-tip="${x.date || x.month || x.year}: ${x.clicks} calls, ${wa[i].clicks} WhatsApp" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; text-align:center; gap:1px;">
+                                        <div style="background:var(--green); border-radius:2px 2px 0 0; min-height:1px; height:${Math.round((x.clicks / mx) * 88)}%;"></div>
+                                        <div style="background:#3a8fd6; border-radius:0 0 2px 2px; min-height:1px; height:${Math.round((wa[i].clicks / mx) * 88)}%;"></div>
+                                        ${lbl ? `<div style="font-size:0.6rem; color:var(--muted); margin-top:3px;">${lbl(x)}</div>` : ''}
+                                    </div>`).join('') + '</div>';
+                        };
+                        const legend = `<div style="display:flex; gap:16px; font-size:0.78rem; color:var(--muted); margin-bottom:10px;">
+                            <span><span style="display:inline-block; width:10px; height:10px; background:var(--green); border-radius:2px; margin-right:5px; vertical-align:middle;"></span>Call</span>
+                            <span><span style="display:inline-block; width:10px; height:10px; background:#3a8fd6; border-radius:2px; margin-right:5px; vertical-align:middle;"></span>WhatsApp</span>
+                        </div>`;
+                        const d30call = c.call.daily.reduce((s, x) => s + x.clicks, 0);
+                        const d30wa = c.whatsapp.daily.reduce((s, x) => s + x.clicks, 0);
+                        const m12call = c.call.monthly.reduce((s, x) => s + x.clicks, 0);
+                        const m12wa = c.whatsapp.monthly.reduce((s, x) => s + x.clicks, 0);
+
+                        view.innerHTML = `
+                            ${legend}
+                            <h4 style="color:var(--green); font-size:0.78rem; text-transform:uppercase; letter-spacing:1px; margin:0 0 8px;">Daily — last 30 days (${d30call} calls, ${d30wa} WhatsApp)</h4>
+                            ${chart(c.call.daily, c.whatsapp.daily, 70)}
+                            <h4 style="color:var(--green); font-size:0.78rem; text-transform:uppercase; letter-spacing:1px; margin:20px 0 8px;">Monthly — last 12 months (${m12call} calls, ${m12wa} WhatsApp)</h4>
+                            ${chart(c.call.monthly, c.whatsapp.monthly, 90, (x) => mNames[parseInt(x.month.slice(5), 10) - 1])}
+                            <h4 style="color:var(--green); font-size:0.78rem; text-transform:uppercase; letter-spacing:1px; margin:20px 0 8px;">Yearly</h4>
+                            ${c.call.yearly.length ? c.call.yearly.map((y, i) => `
+                                <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--muted); padding:4px 0; border-bottom:1px solid var(--line);">
+                                    <span>${y.year}</span>
+                                    <span style="color:var(--text);">${y.clicks} calls &middot; ${c.whatsapp.yearly[i].clicks} WhatsApp</span>
+                                </div>`).join('') : '<p style="color:var(--muted); font-size:0.85rem;">No yearly data yet.</p>'}`;
+                    } catch (err) {
+                        clicksLoaded = false;
+                        view.innerHTML = `<p style="color:#c0705a; font-size:0.9rem;">${err.message}</p>`;
+                    }
+                }
 
                 // UTM generator
                 const slug = (v) => v.trim().toLowerCase().replace(/[^a-z0-9 _.\-]/g, '').replace(/\s+/g, '-').slice(0, 40);
@@ -668,7 +750,7 @@
                                     const mx = Math.max(...items.map((x) => x.views), 1);
                                     return `<div style="display:flex; gap:3px; height:${h}px; align-items:stretch;">` +
                                         items.map((x) => `
-                                            <div title="${x.date || x.month || x.year}: ${x.views} visits" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; text-align:center;">
+                                            <div data-tip="${x.date || x.month || x.year}: ${x.views} visits" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; text-align:center;">
                                                 <div style="background:var(--green); border-radius:2px 2px 0 0; min-height:1px; height:${Math.round((x.views / mx) * 88)}%;"></div>
                                                 ${lbl ? `<div style="font-size:0.6rem; color:var(--muted); margin-top:3px;">${lbl(x)}</div>` : ''}
                                             </div>`).join('') + '</div>';
@@ -727,7 +809,7 @@
                         <div class="stat" style="max-width:220px; margin-bottom:14px;"><div class="num">${yr.total}</div><div class="lbl">Total views in ${yr.year}</div></div>
                         <div style="display:flex; gap:6px; height:130px; align-items:stretch;">
                             ${yr.months.map((m) => `
-                                <div title="${mNames[m.month - 1]} ${yr.year}: ${m.views} views" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; text-align:center;">
+                                <div data-tip="${mNames[m.month - 1]} ${yr.year}: ${m.views} views" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; text-align:center;">
                                     <div style="background:var(--green); border-radius:3px 3px 0 0; min-height:2px; height:${Math.round((m.views / ymax) * 82)}%;"></div>
                                     <div style="font-size:0.65rem; color:var(--muted); margin-top:4px;">${mNames[m.month - 1]}</div>
                                 </div>`).join('')}

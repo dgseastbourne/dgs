@@ -5,7 +5,8 @@ export default function handler(req, res) {
     const secret = process.env.SESSION_SECRET;
     if (!secret) return res.status(500).send('Not configured');
 
-    const payload = verify(req.query.token, secret);
+    const token = new URL(req.url, 'http://x').searchParams.get('token');
+    const payload = verify(token, secret);
     if (!payload || payload.kind !== 'login') {
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         return res.status(401).send('<p style="font-family:sans-serif">This sign-in link is invalid or has expired. <a href="/admin/">Request a new one</a>.</p>');
