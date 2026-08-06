@@ -6,21 +6,25 @@ Darrens Garage Services is based at Unit 1, 64 Belmore Road, Eastbourne, East Su
 
 ## Services
 
-- [Servicing](https://darrensgarageservices.co.uk/services/servicing): Interim and full services on all makes and models, protecting your warranty.
-- [Repairs](https://darrensgarageservices.co.uk/services/repairs): Engine, gearbox and clutch repairs carried out by experienced mechanics.
-- [Diagnostics](https://darrensgarageservices.co.uk/services/diagnostics): Modern engine diagnostics to find faults fast, petrol and diesel.
-- [Brakes & Clutches](https://darrensgarageservices.co.uk/services/brakes-clutches): Brake checks, pads, discs and clutch replacement.
-- [Tyres & Alignment](https://darrensgarageservices.co.uk/services/tyres-alignment): Tyre fitting, puncture repairs, wheel balancing and alignment.
-- [Batteries & Electrics](https://darrensgarageservices.co.uk/services/batteries-electrics): Battery testing and replacement, plus car electrical fault-finding.
-- [Exhausts & Suspension](https://darrensgarageservices.co.uk/services/exhausts-suspension): Exhaust systems, steering adjustment and suspension work.
-- [MOT Testing](https://darrensgarageservices.co.uk/services/mot-testing): MOT testing bay coming soon — sign up to be notified at launch.
+- [Servicing](https://www.darrensgarageservices.co.uk/services/servicing): Interim and full services on all makes and models, protecting your warranty.
+- [Repairs](https://www.darrensgarageservices.co.uk/services/repairs): Engine, gearbox and clutch repairs carried out by experienced mechanics.
+- [Diagnostics](https://www.darrensgarageservices.co.uk/services/diagnostics): Modern engine diagnostics to find faults fast, petrol and diesel.
+- [Brakes & Clutches](https://www.darrensgarageservices.co.uk/services/brakes-clutches): Brake checks, pads, discs and clutch replacement.
+- [Tyres & Alignment](https://www.darrensgarageservices.co.uk/services/tyres-alignment): Tyre fitting, puncture repairs, wheel balancing and alignment.
+- [Batteries & Electrics](https://www.darrensgarageservices.co.uk/services/batteries-electrics): Battery testing and replacement, plus car electrical fault-finding.
+- [Exhausts & Suspension](https://www.darrensgarageservices.co.uk/services/exhausts-suspension): Exhaust systems, steering adjustment and suspension work.
+- [MOT Testing](https://www.darrensgarageservices.co.uk/services/mot-testing): MOT testing bay coming soon — sign up to be notified at launch.
+
+## Tools
+
+- [Free Vehicle Check](https://www.darrensgarageservices.co.uk/vehicle-check): Free UK vehicle check — tax status, MOT status, MOT test history and mileage check, using official DVLA/DVSA data.
 
 ## Company
 
-- [About](https://darrensgarageservices.co.uk/about): Family-run history, values and how the garage works.
-- [Contact](https://darrensgarageservices.co.uk/contact): Contact form, phone, WhatsApp, address and map.
-- [FAQ](https://darrensgarageservices.co.uk/faq): Answers to common questions about servicing, MOT and repairs.
-- [Privacy & Cookie Policy](https://darrensgarageservices.co.uk/privacy): Privacy and cookie policy.
+- [About](https://www.darrensgarageservices.co.uk/about): Family-run history, values and how the garage works.
+- [Contact](https://www.darrensgarageservices.co.uk/contact): Contact form, phone, WhatsApp, address and map.
+- [FAQ](https://www.darrensgarageservices.co.uk/faq): Answers to common questions about servicing, MOT and repairs.
+- [Privacy & Cookie Policy](https://www.darrensgarageservices.co.uk/privacy): Privacy and cookie policy.
 
 ## Optional
 

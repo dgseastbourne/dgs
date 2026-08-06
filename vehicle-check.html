@@ -6,37 +6,37 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-    <title>Free Vehicle Check — Tax &amp; MOT Status | Darrens Garage Services Eastbourne</title>
-    <meta name="description" content="Check any UK vehicle's tax status, MOT status and basic details for free, straight from official DVLA data. Just enter the registration number.">
-    <link rel="canonical" href="https://darrensgarageservices.co.uk/vehicle-check">
+    <title>Free Vehicle Check — Tax, MOT &amp; History | Darrens Garage Services</title>
+    <meta name="description" content="Check any UK vehicle's tax, MOT status and MOT test history for free — official DVLA/DVSA data. Just enter the registration number.">
+    <link rel="canonical" href="https://www.darrensgarageservices.co.uk/vehicle-check">
     <meta property="og:site_name" content="Darrens Garage Services">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Free Vehicle Check — Tax &amp; MOT Status | Darrens Garage Services Eastbourne">
-    <meta property="og:description" content="Check any UK vehicle's tax status, MOT status and basic details for free, straight from official DVLA data.">
-    <meta property="og:url" content="https://darrensgarageservices.co.uk/vehicle-check">
-    <meta property="og:image" content="https://darrensgarageservices.co.uk/assets/og-image.png">
+    <meta property="og:title" content="Free Vehicle Check — Tax, MOT &amp; History | Darrens Garage Services">
+    <meta property="og:description" content="Check any UK vehicle's tax, MOT status and MOT test history for free — official DVLA/DVSA data.">
+    <meta property="og:url" content="https://www.darrensgarageservices.co.uk/vehicle-check">
+    <meta property="og:image" content="https://www.darrensgarageservices.co.uk/assets/og-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:locale" content="en_GB">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Free Vehicle Check — Tax &amp; MOT Status | Darrens Garage Services Eastbourne">
-    <meta name="twitter:description" content="Check any UK vehicle's tax status, MOT status and basic details for free, straight from official DVLA data.">
-    <meta name="twitter:image" content="https://darrensgarageservices.co.uk/assets/og-image.png">
+    <meta name="twitter:title" content="Free Vehicle Check — Tax, MOT &amp; History | Darrens Garage Services">
+    <meta name="twitter:description" content="Check any UK vehicle's tax, MOT status and MOT test history for free — official DVLA/DVSA data.">
+    <meta name="twitter:image" content="https://www.darrensgarageservices.co.uk/assets/og-image.png">
     <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "WebPage",
-      "url": "https://darrensgarageservices.co.uk/vehicle-check",
-      "name": "Free Vehicle Check — Tax & MOT Status",
-      "isPartOf": { "@id": "https://darrensgarageservices.co.uk/#business" }
+      "url": "https://www.darrensgarageservices.co.uk/vehicle-check",
+      "name": "Free Vehicle Check — Tax, MOT & History",
+      "isPartOf": { "@id": "https://www.darrensgarageservices.co.uk/#business" }
     },
     {
       "@type": "BreadcrumbList",
       "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://darrensgarageservices.co.uk/" },
-        { "@type": "ListItem", "position": 2, "name": "Vehicle Check", "item": "https://darrensgarageservices.co.uk/vehicle-check" }
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.darrensgarageservices.co.uk/" },
+        { "@type": "ListItem", "position": 2, "name": "Vehicle Check", "item": "https://www.darrensgarageservices.co.uk/vehicle-check" }
       ]
     }
   ]
@@ -92,15 +92,28 @@
     <section style="padding-top: 0;">
         <div class="wrap">
             <form class="plate-form" id="vcForm">
-                <div class="plate-input-wrap">
-                    <span class="plate-gb"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</span>GB</span>
-                    <input type="text" id="vcReg" name="reg" placeholder="e.g. AB12 CDE" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-label="Vehicle registration number">
+                <div class="plate-combo">
+                    <span class="plate-flag">
+                        <svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <rect width="60" height="30" fill="#00247d"/>
+                            <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
+                            <path d="M0,0 L60,30 M60,0 L0,30" stroke="#cf142b" stroke-width="2"/>
+                            <path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/>
+                            <path d="M30,0 V30 M0,15 H60" stroke="#cf142b" stroke-width="6"/>
+                        </svg>
+                        GB
+                    </span>
+                    <div class="plate-input-wrap">
+                        <input type="text" id="vcReg" name="reg" placeholder="e.g. AB12 CDE" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-label="Vehicle registration number">
+                    </div>
                 </div>
                 <button class="btn" type="submit" id="vcBtn">Check vehicle</button>
             </form>
             <div class="vc-status" id="vcStatus"></div>
             <div id="vcResult"></div>
-            <p class="vc-disclaimer">Data supplied by the DVLA Vehicle Enquiry Service. This is a free basic check (tax status, MOT status and vehicle details) — it is not a full vehicle history report and does not cover previous owners, outstanding finance, write-off records or mileage verification. For a used-car purchase we'd always recommend a full history check alongside this.</p>
+            <div id="mileageResult"></div>
+            <div id="motResult"></div>
+            <p class="vc-disclaimer">Data supplied by the DVLA Vehicle Enquiry Service and the DVSA MOT History API. This is a free basic check (tax/MOT status, vehicle details and MOT test history) — it is not a full vehicle history report and does not cover previous owners, outstanding finance or write-off records. For a used-car purchase we'd always recommend a full history check alongside this.</p>
         </div>
     </section>
 
@@ -184,6 +197,8 @@
         const vcInput = document.getElementById('vcReg');
         const vcStatus = document.getElementById('vcStatus');
         const vcResult = document.getElementById('vcResult');
+        const mileageResult = document.getElementById('mileageResult');
+        const motResult = document.getElementById('motResult');
         const vcBtn = document.getElementById('vcBtn');
 
         function vcSetStatus(msg, cls) {
@@ -216,8 +231,196 @@
                 </div>`;
         }
 
+        function motPillClass(result) {
+            return String(result || '').toUpperCase() === 'PASSED' ? 'ok' : 'bad';
+        }
+
+        function motRecallBadge(vehicle) {
+            const status = vehicle.hasOutstandingRecall;
+            if (!status || status === 'Unavailable') return '';
+            if (status === 'Yes') {
+                return `<div class="mot-recall bad"><span class="vc-pill bad">Outstanding recall</span><p>This vehicle has at least one manufacturer safety recall that has not yet been fixed. Contact a dealer for that make to get it resolved — it's free.</p></div>`;
+            }
+            if (status === 'No') {
+                return `<div class="mot-recall ok"><span class="vc-pill ok">No outstanding recalls</span><p>Any known recalls for this vehicle have been fixed.</p></div>`;
+            }
+            return ''; // 'Unknown' — not worth alarming visitors over
+        }
+
+        function motRender(vehicle) {
+            const tests = vehicle.motTests || [];
+            const recallHtml = motRecallBadge(vehicle);
+            if (!tests.length && !recallHtml) { motResult.innerHTML = ''; return; }
+
+            const modelBit = vehicle.model ? ` — ${vehicle.make || ''} ${vehicle.model}`.trim() : '';
+
+            const rows = tests.map((t) => {
+                const parsed = parseMotDate(t.completedDate);
+                const date = parsed ? parsed.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+                const mileage = t.odometerValue && t.odometerResultType === 'READ'
+                    ? `${Number(t.odometerValue).toLocaleString()} ${(t.odometerUnit || '').toLowerCase()}`.trim()
+                    : '';
+                // "defects" in the current API (was "rfrAndComments" in the old, deprecated API)
+                const defects = t.defects || t.rfrAndComments || [];
+                const rfr = defects.map((c) => {
+                    const type = String(c.type || '').toUpperCase();
+                    const cls = c.dangerous || type === 'DANGEROUS' ? 'dangerous' : (type === 'FAIL' || type === 'MAJOR' ? 'fail' : '');
+                    const tag = c.type ? ` <span class="mot-rfr-type">(${c.type}${c.dangerous ? ', dangerous' : ''})</span>` : '';
+                    return `<li class="${cls}">${c.text}${tag}</li>`;
+                }).join('');
+                return `
+                    <div class="mot-test">
+                        <div class="mot-test-head">
+                            <span class="mot-date">${date}</span>
+                            <span class="vc-pill ${motPillClass(t.testResult)}">${t.testResult || '—'}</span>
+                            ${mileage ? `<span class="mot-mileage">${mileage}</span>` : ''}
+                        </div>
+                        ${rfr ? `<ul class="mot-rfr">${rfr}</ul>` : ''}
+                    </div>`;
+            }).join('');
+
+            motResult.innerHTML = `
+                <div class="mot-section">
+                    <h2>MOT test history${modelBit}</h2>
+                    ${recallHtml}
+                    ${rows}
+                </div>`;
+        }
+
+        // ---------- Mileage check (built from MOT test odometer readings) ----------
+        // completedDate is ISO 8601 date-time, e.g. "2023-02-17T09:17:46.000Z"
+        function parseMotDate(s) {
+            if (!s) return null;
+            const d = new Date(s);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+
+        function milesFromTest(t) {
+            if (!t.odometerValue || t.odometerResultType === 'NO_ODOMETER' || t.odometerResultType === 'UNREADABLE') return null;
+            const v = Number(t.odometerValue);
+            if (!Number.isFinite(v)) return null;
+            return String(t.odometerUnit || 'mi').toLowerCase() === 'km' ? v * 0.621371 : v;
+        }
+
+        function buildMileageChart(points) {
+            const W = 640, H = 200, padL = 54, padR = 16, padT = 16, padB = 30;
+            const xs = points.map((p) => p.date.getTime());
+            const minX = Math.min(...xs), maxX = Math.max(...xs);
+            const maxY = Math.max(...points.map((p) => p.miles)) * 1.1 || 1;
+            const xPos = (t) => padL + (maxX === minX ? (W - padL - padR) / 2 : ((t - minX) / (maxX - minX)) * (W - padL - padR));
+            const yPos = (v) => H - padB - (v / maxY) * (H - padT - padB);
+
+            const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xPos(p.date.getTime()).toFixed(1)},${yPos(p.miles).toFixed(1)}`).join(' ');
+            const dots = points.map((p) => {
+                const cx = xPos(p.date.getTime()).toFixed(1);
+                const cy = yPos(p.miles).toFixed(1);
+                const color = p.anomaly ? '#c0705a' : 'var(--green)';
+                const label = `${p.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}: ${Math.round(p.miles).toLocaleString()} mi`;
+                return `<circle cx="${cx}" cy="${cy}" r="4.5" fill="${color}" stroke="var(--bg)" stroke-width="1.5"><title>${label}</title></circle>`;
+            }).join('');
+
+            const gridLines = [0, 0.25, 0.5, 0.75, 1].map((f) => {
+                const gy = (H - padB - f * (H - padT - padB)).toFixed(1);
+                const val = Math.round(f * maxY).toLocaleString();
+                return `<line x1="${padL}" y1="${gy}" x2="${W - padR}" y2="${gy}" stroke="var(--line)" stroke-width="1"/>
+                        <text x="${padL - 8}" y="${gy}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="var(--muted)">${val}</text>`;
+            }).join('');
+
+            const firstLabel = points[0].date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+            const lastLabel = points[points.length - 1].date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+
+            return `
+                <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mileage over time chart">
+                    ${gridLines}
+                    <path d="${path}" fill="none" stroke="var(--green)" stroke-width="2.5"/>
+                    ${dots}
+                    <text x="${padL}" y="${H - 6}" font-size="10" fill="var(--muted)">${firstLabel}</text>
+                    <text x="${W - padR}" y="${H - 6}" text-anchor="end" font-size="10" fill="var(--muted)">${lastLabel}</text>
+                </svg>`;
+        }
+
+        function motRenderMileage(vehicle) {
+            const tests = (vehicle.motTests || [])
+                .map((t) => ({ date: parseMotDate(t.completedDate), miles: milesFromTest(t) }))
+                .filter((p) => p.date && p.miles !== null)
+                .sort((a, b) => a.date - b.date);
+
+            if (!tests.length) { mileageResult.innerHTML = ''; return; }
+
+            if (tests.length === 1) {
+                mileageResult.innerHTML = `
+                    <div class="vc-result mileage-card">
+                        <h2>Mileage check</h2>
+                        <div class="mileage-verdict">
+                            <span class="vc-pill muted">Not enough data</span>
+                            <p>Only one MOT test with a mileage reading is on record (${Math.round(tests[0].miles).toLocaleString()} mi, ${tests[0].date.toLocaleDateString('en-GB')}) — not enough history yet to check for discrepancies.</p>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            const anomalies = [];
+            for (let i = 1; i < tests.length; i++) {
+                if (tests[i].miles < tests[i - 1].miles - 1) {
+                    tests[i].anomaly = true;
+                    tests[i - 1].anomaly = true;
+                    anomalies.push({ from: tests[i - 1], to: tests[i] });
+                }
+            }
+
+            const first = tests[0], last = tests[tests.length - 1];
+            const years = Math.max((last.date - first.date) / (1000 * 60 * 60 * 24 * 365.25), 0.1);
+            const avgPerYear = Math.round((last.miles - first.miles) / years);
+
+            let verdictClass = 'ok', verdictLabel = 'Looks consistent';
+            let verdictText = 'No mileage discrepancies found across the MOT records we have.';
+            if (anomalies.length) {
+                verdictClass = 'bad';
+                verdictLabel = 'Possible issue';
+                verdictText = 'Mileage discrepancy: the recorded mileage dropped between ' +
+                    anomalies.map((a) => `${a.from.date.toLocaleDateString('en-GB')} (${Math.round(a.from.miles).toLocaleString()} mi) and ${a.to.date.toLocaleDateString('en-GB')} (${Math.round(a.to.miles).toLocaleString()} mi)`).join('; ') +
+                    '. This can point to an odometer or recording issue — worth investigating further before buying.';
+            }
+
+            mileageResult.innerHTML = `
+                <div class="vc-result mileage-card">
+                    <h2>Mileage check</h2>
+                    <div class="mileage-chart">${buildMileageChart(tests)}</div>
+                    <div class="mileage-verdict">
+                        <span class="vc-pill ${verdictClass}">${verdictLabel}</span>
+                        <p>${verdictText}</p>
+                    </div>
+                    <div class="vc-fields" style="margin-top: 18px;">
+                        ${anomalies.length ? '' : `<div class="vc-field"><div class="lbl">Average mileage / year</div><div class="val">${avgPerYear.toLocaleString()} mi</div></div>`}
+                        <div class="vc-field"><div class="lbl">First MOT on record</div><div class="val">${Math.round(first.miles).toLocaleString()} mi (${first.date.toLocaleDateString('en-GB')})</div></div>
+                        <div class="vc-field"><div class="lbl">Most recent MOT</div><div class="val">${Math.round(last.miles).toLocaleString()} mi (${last.date.toLocaleDateString('en-GB')})</div></div>
+                    </div>
+                    <p class="vc-disclaimer" style="margin-top: 18px;">This only looks at mileage recorded at MOT tests — it can't detect an issue before the first MOT or between test dates. It's an indicator, not a guarantee. Always check the physical odometer and service history before buying.</p>
+                </div>`;
+        }
+
+        async function motLookup(reg) {
+            motResult.innerHTML = '';
+            mileageResult.innerHTML = '';
+            try {
+                const r = await fetch('/api/mot-history', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reg }),
+                });
+                const body = await r.json().catch(() => ({}));
+                // MOT history is a bonus section — stay quiet if it's not configured yet
+                // or there's simply no history, so it never overshadows the DVLA result above.
+                if (!r.ok || !body.vehicle) return;
+                motRenderMileage(body.vehicle);
+                motRender(body.vehicle);
+            } catch { /* silent — this is a secondary, best-effort section */ }
+        }
+
         async function vcLookup(reg) {
             vcResult.innerHTML = '';
+            mileageResult.innerHTML = '';
+            motResult.innerHTML = '';
             vcSetStatus('Checking DVLA…', 'loading');
             vcBtn.disabled = true;
             try {
@@ -230,6 +433,7 @@
                 if (!r.ok) throw new Error(body.error || 'Something went wrong — please try again.');
                 vcSetStatus('');
                 vcRender(body.vehicle);
+                motLookup(reg);
             } catch (err) {
                 vcSetStatus(err.message, 'err');
             } finally {

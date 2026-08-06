@@ -455,16 +455,20 @@ details p { padding: 0 22px 18px; color: var(--muted); font-size: 0.95rem; }
     display: flex; gap: 12px; max-width: 480px; margin: 0 auto; flex-wrap: wrap;
     justify-content: center;
 }
+.plate-combo {
+    flex: 1; min-width: 220px; display: flex; gap: 10px;
+}
+.plate-flag {
+    background: #012169; color: #fff; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px; padding: 0 12px;
+    font-weight: 800; font-size: 0.7rem; letter-spacing: 0.5px; flex-shrink: 0;
+    border-radius: 8px; border: 2px solid #1a1a1a; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+.plate-flag svg { width: 26px; height: 16px; border-radius: 2px; display: block; }
 .plate-input-wrap {
-    flex: 1; min-width: 220px; display: flex; border-radius: 8px; overflow: hidden;
+    flex: 1; display: flex; border-radius: 8px; overflow: hidden;
     border: 2px solid #1a1a1a; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
-.plate-gb {
-    background: #003399; color: #fff; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; padding: 0 10px; font-weight: 800;
-    font-size: 0.7rem; letter-spacing: 0.5px; flex-shrink: 0;
-}
-.plate-gb .stars { color: #ffcc00; font-size: 0.6rem; line-height: 1; margin-bottom: 2px; }
 .plate-input-wrap input {
     border: none; background: #ffd800; color: #0c0e0c; font-weight: 800;
     font-size: 1.3rem; letter-spacing: 3px; text-transform: uppercase;
@@ -515,6 +519,40 @@ details p { padding: 0 22px 18px; color: var(--muted); font-size: 0.95rem; }
     max-width: 640px; margin: 26px auto 0; text-align: center;
     font-size: 0.85rem; color: var(--muted); line-height: 1.6;
 }
+
+/* Mileage check */
+.mileage-card h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 18px; }
+.mileage-chart { margin-bottom: 22px; }
+.mileage-chart svg { width: 100%; height: auto; display: block; }
+.mileage-verdict { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
+.mileage-verdict p { color: var(--muted); font-size: 0.92rem; margin: 0; flex: 1; min-width: 220px; line-height: 1.55; }
+
+/* MOT test history */
+.mot-section { max-width: 720px; margin: 32px auto 0; }
+.mot-section h2 { font-size: 1.3rem; font-weight: 800; text-align: center; margin-bottom: 20px; }
+.mot-test {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; margin-bottom: 12px;
+}
+.mot-test-head {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; flex-wrap: wrap;
+}
+.mot-date { font-weight: 700; }
+.mot-mileage { color: var(--muted); font-size: 0.9rem; margin-left: auto; }
+.mot-rfr { list-style: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.mot-rfr li { color: var(--muted); font-size: 0.88rem; margin-bottom: 6px; padding-left: 18px; position: relative; }
+.mot-rfr li::before { content: '\2022'; position: absolute; left: 2px; color: var(--muted); }
+.mot-rfr li.dangerous, .mot-rfr li.fail { color: #c0705a; }
+.mot-rfr li.dangerous::before, .mot-rfr li.fail::before { color: #c0705a; }
+.mot-rfr-type { opacity: 0.75; font-size: 0.85em; }
+.mot-recall {
+    display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap;
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px; margin-bottom: 18px;
+}
+.mot-recall.bad { border-color: #c0705a; }
+.mot-recall p { color: var(--muted); font-size: 0.9rem; margin: 0; flex: 1; min-width: 200px; line-height: 1.5; }
 
 /* Homepage widget */
 #vehicle-check-widget {
