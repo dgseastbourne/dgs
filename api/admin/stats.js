@@ -10,9 +10,13 @@ const NPM_DEPENDENCIES = {}; // mirrors package.json — intentionally empty by 
 const PINNED_LIBRARIES = [
     {
         name: 'qrcode-generator',
-        version: '1.4.4',
+        version: '1.5.2',
         usedIn: 'Admin dashboard — QR code generator (loaded from cdnjs)',
         cdnjsSlug: 'qrcode-generator',
+        // cdnjs' "latest version" metadata can lag behind which versions it has actually
+        // mirrored files for (e.g. qrcode-generator 2.x is listed but 404s) — so a
+        // reported "latest" is only trusted once this actual file URL is confirmed live.
+        cdnFile: (v) => `https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/${v}/qrcode.min.js`,
     },
 ];
 
@@ -25,6 +29,19 @@ async function fetchJson(url, timeoutMs = 5000) {
         return await r.json();
     } catch {
         return null;
+    } finally {
+        clearTimeout(t);
+    }
+}
+
+async function urlExists(url, timeoutMs = 5000) {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const r = await fetch(url, { method: 'HEAD', signal: controller.signal });
+        return r.ok;
+    } catch {
+        return false;
     } finally {
         clearTimeout(t);
     }
@@ -54,7 +71,12 @@ async function dependenciesReport(res) {
 
     const libraries = await Promise.all(PINNED_LIBRARIES.map(async (lib) => {
         const data = await fetchJson(`https://api.cdnjs.com/libraries/${lib.cdnjsSlug}?fields=version,homepage`);
-        const latest = data?.version || null;
+        let latest = data?.version || null;
+        // Confirm cdnjs actually hosts a file for that "latest" version before trusting it —
+        // its metadata can list a version before (or without ever) mirroring its files.
+        if (latest && latest !== lib.version && lib.cdnFile && !(await urlExists(lib.cdnFile(latest)))) {
+            latest = null;
+        }
         return {
             name: lib.name,
             usedIn: lib.usedIn,
