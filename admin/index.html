@@ -386,7 +386,7 @@
             const el = document.getElementById('depsBody');
             el.innerHTML = '<p style="color: var(--muted);">Checking…</p>';
             try {
-                const r = await fetch('/api/admin/dependencies');
+                const r = await fetch('/api/admin/stats?deps=1');
                 const d = await r.json();
                 if (!r.ok) throw new Error(d.error || 'Could not check dependencies.');
                 depsLoaded = true;
