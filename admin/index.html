@@ -405,6 +405,7 @@
                             ${pill(lib.updateAvailable)}
                         </div>
                         <div style="color: var(--muted); font-size: 0.82rem; margin-top: 2px;">${lib.usedIn}</div>
+                        ${lib.updateAvailable === null ? '<div style="color: var(--muted); font-size: 0.78rem; margin-top: 4px; font-style: italic;">cdnjs lists a newer version but hasn\'t actually published its files yet — this is expected, not an error. Try "Check again" later.</div>' : ''}
                     </div>`).join('');
 
                 el.innerHTML = `
