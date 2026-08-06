@@ -476,7 +476,10 @@ details p { padding: 0 22px 18px; color: var(--muted); font-size: 0.95rem; }
 }
 .plate-input-wrap input:focus { outline: none; background: #ffe040; }
 .plate-input-wrap input::placeholder { color: rgba(12, 14, 12, 0.45); letter-spacing: 2px; }
-.plate-form .btn { padding: 0 28px; border: none; cursor: pointer; font-size: 1rem; font-family: inherit; }
+.plate-form .btn {
+    padding: 16px 28px; border: none; cursor: pointer; font-size: 1.05rem;
+    font-weight: 700; font-family: inherit; white-space: nowrap;
+}
 
 .vc-status { margin: 18px auto 0; max-width: 480px; text-align: center; font-size: 0.95rem; }
 .vc-status.err { color: #c0705a; }
