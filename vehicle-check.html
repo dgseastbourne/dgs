@@ -254,12 +254,29 @@
 
             const modelBit = vehicle.model ? ` — ${vehicle.make || ''} ${vehicle.model}`.trim() : '';
 
+            // Chronological (oldest-first) mileage series, keyed back to the original test
+            // objects — used to work out the change since the previous MOT for each row,
+            // regardless of what order the API itself returned the tests in.
+            const mileageSeries = tests
+                .map((t) => ({ raw: t, date: parseMotDate(t.completedDate), miles: milesFromTest(t) }))
+                .filter((p) => p.date && p.miles !== null)
+                .sort((a, b) => a.date - b.date);
+
+            const deltaFor = (t) => {
+                const idx = mileageSeries.findIndex((p) => p.raw === t);
+                if (idx <= 0) return '';
+                const diff = mileageSeries[idx].miles - mileageSeries[idx - 1].miles;
+                const pct = fmtPct(pctChange(mileageSeries[idx - 1].miles, mileageSeries[idx].miles));
+                return `${diff >= 0 ? '+' : ''}${Math.round(diff).toLocaleString()} mi${pct ? ` (${pct})` : ''} since previous MOT`;
+            };
+
             const rows = tests.map((t) => {
                 const parsed = parseMotDate(t.completedDate);
                 const date = parsed ? parsed.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
                 const mileage = t.odometerValue && t.odometerResultType === 'READ'
                     ? `${Number(t.odometerValue).toLocaleString()} ${(t.odometerUnit || '').toLowerCase()}`.trim()
                     : '';
+                const delta = mileage ? deltaFor(t) : '';
                 // "defects" in the current API (was "rfrAndComments" in the old, deprecated API)
                 const defects = t.defects || t.rfrAndComments || [];
                 const rfr = defects.map((c) => {
@@ -275,6 +292,7 @@
                             <span class="vc-pill ${motPillClass(t.testResult)}">${t.testResult || '—'}</span>
                             ${mileage ? `<span class="mot-mileage">${mileage}</span>` : ''}
                         </div>
+                        ${delta ? `<div class="mot-delta">${delta}</div>` : ''}
                         ${rfr ? `<ul class="mot-rfr">${rfr}</ul>` : ''}
                     </div>`;
             }).join('');

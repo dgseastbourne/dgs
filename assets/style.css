@@ -547,6 +547,7 @@ details p { padding: 0 22px 18px; color: var(--muted); font-size: 0.95rem; }
 }
 .mot-date { font-weight: 700; }
 .mot-mileage { color: var(--muted); font-size: 0.9rem; margin-left: auto; }
+.mot-delta { color: var(--muted); font-size: 0.82rem; margin-top: 6px; opacity: 0.85; }
 .mot-rfr { list-style: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
 .mot-rfr li { color: var(--muted); font-size: 0.88rem; margin-bottom: 6px; padding-left: 18px; position: relative; }
 .mot-rfr li::before { content: '\2022'; position: absolute; left: 2px; color: var(--muted); }
