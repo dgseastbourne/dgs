@@ -302,6 +302,15 @@
             return String(t.odometerUnit || 'mi').toLowerCase() === 'km' ? v * 0.621371 : v;
         }
 
+        function pctChange(prev, curr) {
+            if (!prev) return null;
+            return ((curr - prev) / prev) * 100;
+        }
+        function fmtPct(p) {
+            if (p === null || p === undefined || !Number.isFinite(p)) return '';
+            return `${p >= 0 ? '+' : ''}${p.toFixed(0)}%`;
+        }
+
         function buildMileageChart(points) {
             const W = 640, H = 200, padL = 54, padR = 16, padT = 16, padB = 30;
             const xs = points.map((p) => p.date.getTime());
@@ -311,11 +320,14 @@
             const yPos = (v) => H - padB - (v / maxY) * (H - padT - padB);
 
             const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xPos(p.date.getTime()).toFixed(1)},${yPos(p.miles).toFixed(1)}`).join(' ');
-            const dots = points.map((p) => {
+            const dots = points.map((p, i) => {
                 const cx = xPos(p.date.getTime()).toFixed(1);
                 const cy = yPos(p.miles).toFixed(1);
                 const color = p.anomaly ? '#c0705a' : 'var(--green)';
-                const label = `${p.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}: ${Math.round(p.miles).toLocaleString()} mi`;
+                const prev = points[i - 1];
+                const pct = prev ? fmtPct(pctChange(prev.miles, p.miles)) : '';
+                const label = `${p.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}: ${Math.round(p.miles).toLocaleString()} mi` +
+                    (pct ? ` (${pct} vs previous MOT)` : '');
                 return `<circle cx="${cx}" cy="${cy}" r="4.5" fill="${color}" stroke="var(--bg)" stroke-width="1.5"><title>${label}</title></circle>`;
             }).join('');
 
@@ -369,8 +381,13 @@
             }
 
             const first = tests[0], last = tests[tests.length - 1];
+            const prevToLast = tests[tests.length - 2];
             const years = Math.max((last.date - first.date) / (1000 * 60 * 60 * 24 * 365.25), 0.1);
             const avgPerYear = Math.round((last.miles - first.miles) / years);
+
+            const sinceLastMiles = last.miles - prevToLast.miles;
+            const sinceLastPct = fmtPct(pctChange(prevToLast.miles, last.miles));
+            const sinceLastSign = sinceLastMiles >= 0 ? '+' : '';
 
             let verdictClass = 'ok', verdictLabel = 'Looks consistent';
             let verdictText = 'No mileage discrepancies found across the MOT records we have.';
@@ -385,12 +402,21 @@
             mileageResult.innerHTML = `
                 <div class="vc-result mileage-card">
                     <h2>Mileage check</h2>
+                    <div class="mileage-legend">
+                        <span class="lg-item"><span class="lg-dot" style="background: var(--green);"></span>Mileage at each MOT</span>
+                        ${anomalies.length ? '<span class="lg-item"><span class="lg-dot" style="background: #c0705a;"></span>Discrepancy</span>' : ''}
+                    </div>
                     <div class="mileage-chart">${buildMileageChart(tests)}</div>
+                    <p class="mileage-chart-hint">Hover or tap a point for the exact date, mileage and change vs the previous MOT.</p>
                     <div class="mileage-verdict">
                         <span class="vc-pill ${verdictClass}">${verdictLabel}</span>
                         <p>${verdictText}</p>
                     </div>
                     <div class="vc-fields" style="margin-top: 18px;">
+                        <div class="vc-field">
+                            <div class="lbl">Since previous MOT</div>
+                            <div class="val" style="${sinceLastMiles < 0 ? 'color: #c0705a;' : ''}">${sinceLastSign}${Math.round(sinceLastMiles).toLocaleString()} mi (${sinceLastPct})</div>
+                        </div>
                         ${anomalies.length ? '' : `<div class="vc-field"><div class="lbl">Average mileage / year</div><div class="val">${avgPerYear.toLocaleString()} mi</div></div>`}
                         <div class="vc-field"><div class="lbl">First MOT on record</div><div class="val">${Math.round(first.miles).toLocaleString()} mi (${first.date.toLocaleDateString('en-GB')})</div></div>
                         <div class="vc-field"><div class="lbl">Most recent MOT</div><div class="val">${Math.round(last.miles).toLocaleString()} mi (${last.date.toLocaleDateString('en-GB')})</div></div>
