@@ -423,6 +423,10 @@
             motResult.innerHTML = '';
             vcSetStatus('Checking DVLA…', 'loading');
             vcBtn.disabled = true;
+            // Independent of the DVLA (VES) lookup below — different API, different data
+            // source, so one failing (e.g. VES still being on a UAT/test key) shouldn't
+            // block the other from showing.
+            motLookup(reg);
             try {
                 const r = await fetch('/api/vehicle-check', {
                     method: 'POST',
@@ -433,7 +437,6 @@
                 if (!r.ok) throw new Error(body.error || 'Something went wrong — please try again.');
                 vcSetStatus('');
                 vcRender(body.vehicle);
-                motLookup(reg);
             } catch (err) {
                 vcSetStatus(err.message, 'err');
             } finally {
